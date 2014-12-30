@@ -5,7 +5,8 @@
 if(R.version[1]=="x86_64-pc-linux-gnu") {
   library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
   library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-  setwd("/net/home/asnauffer/Documents/PhD/Rcode")
+#   setwd("/net/home/asnauffer/Documents/PhD/Rcode")
+  setwd("/net/home/asnauffer/Documents/PhD/EcoH2Lproj/")
 } else {
   library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
   library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
@@ -68,14 +69,14 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
     swediff <- diff(aspallswe) # array of change in SWE
     logsweinc <- c(0,swediff) > sweinctol # logical - which days experienced SWE increase (0 added at beginning so array is the same length)
     logsweinc[is.na(logsweinc)]=F # if NA, this means SWE didn't increase and can be set to False
-    lognap <- is.na(aspallprec) # logical – precip is NA
-    logzerop <- aspallprec==0 # logical – precip is 0
-    lognop <- lognap | logzerop # logical – no precip when precip is 0 or NA
-    logswenop <- logsweinc & lognop # logical – SWE increased but no corresponding precip 
+    lognap <- is.na(aspallprec) # logical - precip is NA
+    logzerop <- aspallprec==0 # logical - precip is 0
+    lognop <- lognap | logzerop # logical - no precip when precip is 0 or NA
+    logswenop <- logsweinc & lognop # logical - SWE increased but no corresponding precip 
 
     # create discard vector 
     logbadtp <- lognatx | lognatn | logtxlttn | lognap # bad T or P values
-    logdiscard <- logbadtp | logswenop # discard bad T or P or when SWE increases with no P
+    logdiscard <- logbadtp | logswenop # logical - discard bad T or P or when SWE increases with no P
     
     for(iyr in aspYunique){
       print(paste(stnname[istn],iyr,"running"))
@@ -188,21 +189,22 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
 #         fnout <- paste("plots/",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
         jpeg(fnout,width=480*3,height=480*2,pointsize=24,quality=100)
         layout(matrix(c(1,2,2), 3, 1, byrow = TRUE))
-         plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
-         lines(aspdate,smswe,col="red",lwd=linew)
-#         lines(aspdate,smsweG0,col="darkred",lwd=linew)
-         lines(aspdate,smswe2L,col="blue",lwd=linew)
-#         lines(aspdate,smswe2LG0,col="darkblue",lwd=linew)
-#         lines(aspdate,smsweaccum,col="green",lwd=linew)
-#         lines(aspdate,smsweaccumwarm,col="darkorange",lwd=linew)
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
+        lines(aspdate,smswe,col="red",lwd=linew)
+#        lines(aspdate,smsweG0,col="darkred",lwd=linew)
+        lines(aspdate,smswe2L,col="blue",lwd=linew-1)
+#        lines(aspdate,smswe2LG0,col="darkblue",lwd=linew)
+#        lines(aspdate,smsweaccum,col="green",lwd=linew)
+#        lines(aspdate,smsweaccumwarm,col="darkorange",lwd=linew)
         title(paste("Station",stnname[istn],iyr,"1L exec time =",exectime,"MAE =",round(mae,0),"; 2L exec time =",exectime2L,"MAE =",round(mae2L,0)))
-#         legend("topleft",c("ASP measured","EcoH modeled","EcoH modeled G=0","EcoH 2L modeled","EcoH 2L modeled G=0","P(Tav<0) measured","Total P measured"),
-#                col=c("black","red","darkred","blue","darkblue","green","darkorange"),lwd=linew,bty="n")
-         legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled"),
+#        legend("topleft",c("ASP measured","EcoH modeled","EcoH modeled G=0","EcoH 2L modeled","EcoH 2L modeled G=0","P(Tav<0) measured","Total P measured"),
+#               col=c("black","red","darkred","blue","darkblue","green","darkorange"),lwd=linew,bty="n")
+        legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled"),
                 col=c("black","red","blue"),lwd=linew,bty="n")
-          plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="Tav (deg-C)",lwd=linew)
-#         lines(aspdate,asp$Temp..Max.,col="red",lwd=1)
-#         lines(aspdate,asp$Temp..Min.,col="blue",lwd=1)
+        tempdata <- data.frame((asp$Temp..Max.+asp$Temp..Min.)/2),sm_asp$SnowTemp,sm_asp2L$SnowTempUpper,sm_asp2L$SnowTempLower)
+        plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="Tav (deg-C)",lwd=linew,ylim=c(min(tempdata),max(tempdata)))
+#        lines(aspdate,asp$Temp..Max.,col="red",lwd=1)
+#        lines(aspdate,asp$Temp..Min.,col="blue",lwd=1)
         lines(aspdate,sm_asp$SnowTemp,col="black",lwd=6)
         lines(aspdate,sm_asp2L$SnowTempUpper,col="red",lwd=5)
         lines(aspdate,sm_asp2L$SnowTempLower,col="blue",lwd=2)
