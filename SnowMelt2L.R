@@ -180,7 +180,7 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 	
 #	Results<-data.frame(Date, Tmax_C, Tmin_C, precip_mm, R_m*1000, NewSnowWatEq*1000, SnowMelt*1000, NewSnow, SnowDepth, SnowWaterEq*1000)
 #	colnames(Results)<-c("Date", "MaxT_C", "MinT_C", "Precip_mm", "Rain_mm", "SnowfallWatEq_mm", "SnowMelt_mm","NewSnow_m", "SnowDepth_m", "SnowWaterEq_mm")
-	Results<-data.frame(Date, Tmax_C, Tmin_C, precip_mm, R_m*1000, NewSnowWatEq*1000,SnowMelt*1000, SnowMeltUpper*1000, SnowMeltLower*1000, NewSnow, SnowDepth, SnowWaterEq*1000, SnowTempUpper, SnowTempLower)
-	colnames(Results)<-c("Date", "MaxT_C", "MinT_C", "Precip_mm", "Rain_mm", "SnowfallWatEq_mm", "SnowMelt_mm","SnowMeltUpper_mm","SnowMeltLower_mm", "NewSnow_m", "SnowDepth_m", "SnowWaterEq_mm", "SnowTempUpper", "SnowTempLower")
+	Results<-data.frame(Date, Tmax_C, Tmin_C, precip_mm, R_m*1000, NewSnowWatEq*1000,SnowMelt*1000, SnowMeltUpper*1000, SnowMeltLower*1000, NewSnow, SnowDepth, SnowWaterEq*1000, SnowWaterEqUpper*1000, SnowWaterEqLower*1000, SnowTempUpper, SnowTempLower)
+	colnames(Results)<-c("Date", "MaxT_C", "MinT_C", "Precip_mm", "Rain_mm", "SnowfallWatEq_mm", "SnowMelt_mm","SnowMeltUpper_mm","SnowMeltLower_mm", "NewSnow_m", "SnowDepth_m", "SnowWaterEq_mm", "SnowWaterEqUpper_mm", "SnowWaterEqLower_mm", "SnowTempUpper", "SnowTempLower")
 	return(Results)
 }	

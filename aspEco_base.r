@@ -105,19 +105,22 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
       aspswe <- asp$Snow.Water.Equivalent
       aspdate <- as.Date(asp$Date,format=fmt)
       
-#       out_asp <- paste(istn,try({
+      # stock SnowMelt
         exectime <- round(system.time({
           sm_asp <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
                              Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
         }),3)[3]
         smswe <- sm_asp$SnowWaterEq_mm
         mae <- mean(abs(aspswe[logvalidcompareyr]-smswe[logvalidcompareyr]))
+        smsm <- sm_asp$SnowMelt_mm
 
+      # SnowMelt with ground conduction G=0
         sm_aspG0 <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
                            Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn], G=0)
         smsweG0 <- sm_aspG0$SnowWaterEq_mm
         maeG0 <- mean(abs(aspswe[logvalidcompareyr]-smsweG0[logvalidcompareyr]))
 
+      # 2L SnowMelt 
         exectime2L <- tryCatch(round(system.time(
           sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
@@ -126,28 +129,33 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
           print(exectime2L)
           next
         }
-        #      }, error = function() next)# {
-#         print(paste("ERROR in",stnname[istn],istn,":",err))
-#         next
-#       })
         smswe2L <- sm_asp2L$SnowWaterEq_mm
+        smsweu2L <- sm_asp2L$SnowWaterEqUpper_mm
+        smswel2L <- sm_asp2L$SnowWaterEqLower_mm
         mae2L <- mean(abs(aspswe[logvalidcompareyr]-smswe2L[logvalidcompareyr]))
-
+        smsm2L <- sm_asp2L$SnowMelt_mm
+        smsmu2L <- sm_asp2L$SnowMeltUpper_mm
+        smsml2L <- sm_asp2L$SnowMeltLower_mm
+      
+      # 2L SnowMelt with ground conduction G=0
         sm_asp2LG0 <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn], G=0)
         smswe2LG0 <- sm_asp2LG0$SnowWaterEq_mm
         mae2LG0 <- mean(abs(aspswe[logvalidcompareyr]-smswe2LG0[logvalidcompareyr]))
 
+      # accumulation for Tav<=0
         sm_accum <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
                                  Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn],
                                 logNoAccumWarm=TRUE)
         smsweaccum <- sm_accum$SnowWaterEq_mm
+      
+      # total P accumulation
         sm_accumwarm <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
                                 Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn],
                                 logNoAccumWarm=FALSE)
         smsweaccumwarm <- sm_accumwarm$SnowWaterEq_mm
-#       }))
 
+      # save stats
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
                         numdates=sum(logyr),
@@ -185,23 +193,29 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
       #plot asp and snowmelt curves
       linew <- 3
 #       out_plot <- paste(istn,try({
-        fnout <- paste("plots/temps/Tswe12_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
+        fnout <- paste("plots/temps/Tswe12UL_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
 #         fnout <- paste("plots/",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
         jpeg(fnout,width=480*3,height=480*2,pointsize=24,quality=100)
-        layout(matrix(c(1,2,2), 3, 1, byrow = TRUE))
-        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
+        layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+#        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
+#        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(min(-smsm,-smsm2L,-smsmu2L,-smsml2L,na.rm=T),max(aspswe,smswe,smswe2L,na.rm=T)))
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,na.rm=T)))
         lines(aspdate,smswe,col="red",lwd=linew)
+#        lines(aspdate,-smsm,col="darkred",lwd=linew)
 #        lines(aspdate,smsweG0,col="darkred",lwd=linew)
         lines(aspdate,smswe2L,col="blue",lwd=linew-1)
+        lines(aspdate,smsweu2L,col="lightblue",lwd=linew-1) # DROPPING BELOW THRESHOLD WHEN LOWER LAYER SWE > 0
+        lines(aspdate,smswel2L,col="darkblue",lwd=linew-1)
+#        lines(aspdate,-smsm2L,col="darkblue",lwd=linew-1)
 #        lines(aspdate,smswe2LG0,col="darkblue",lwd=linew)
 #        lines(aspdate,smsweaccum,col="green",lwd=linew)
 #        lines(aspdate,smsweaccumwarm,col="darkorange",lwd=linew)
         title(paste("Station",stnname[istn],iyr,"1L exec time =",exectime,"MAE =",round(mae,0),"; 2L exec time =",exectime2L,"MAE =",round(mae2L,0)))
 #        legend("topleft",c("ASP measured","EcoH modeled","EcoH modeled G=0","EcoH 2L modeled","EcoH 2L modeled G=0","P(Tav<0) measured","Total P measured"),
 #               col=c("black","red","darkred","blue","darkblue","green","darkorange"),lwd=linew,bty="n")
-        legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled"),
-                col=c("black","red","blue"),lwd=linew,bty="n")
-        tempdata <- data.frame((asp$Temp..Max.+asp$Temp..Min.)/2),sm_asp$SnowTemp,sm_asp2L$SnowTempUpper,sm_asp2L$SnowTempLower)
+        legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled","EcoH 2L Upper","EcoH 2L Lower"),
+                col=c("black","red","blue","lightblue","darkblue"),lwd=linew,bty="n")
+        tempdata <- data.frame((asp$Temp..Max.+asp$Temp..Min.)/2,sm_asp$SnowTemp,sm_asp2L$SnowTempUpper,sm_asp2L$SnowTempLower)
         plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="Tav (deg-C)",lwd=linew,ylim=c(min(tempdata),max(tempdata)))
 #        lines(aspdate,asp$Temp..Max.,col="red",lwd=1)
 #        lines(aspdate,asp$Temp..Min.,col="blue",lwd=1)
