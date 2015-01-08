@@ -193,7 +193,7 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
       #plot asp and snowmelt curves
       linew <- 3
 #       out_plot <- paste(istn,try({
-        fnout <- paste("plots/temps/Tswe12UL_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
+        fnout <- paste("plots/temps/Tswe12UL_mod2_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
 #         fnout <- paste("plots/",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
         jpeg(fnout,width=480*3,height=480*2,pointsize=24,quality=100)
         layout(matrix(c(1,2), 2, 1, byrow = TRUE))

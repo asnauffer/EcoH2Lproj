@@ -98,8 +98,9 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 					SnowTempUpper[i] <- SnowTemp[i]
 					SnowTempLower[i] <- SnowTemp[i]
 				} else { # recalculate upper and lower snow temperatures using 2 layers
-					PrevSnowTempUpper <- max(min(0,Tmin_C[i]),min(0,SnowTempUpper[i-1]+Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000)))
-					PrevSnowTempLower <- max(min(0,Tmin_C[i]),min(0,SnowTempLower[i-1]+G/((SnowDensity[i-1]*SnowDepth[i-1]-SurfLayermax)*SnowHeatCap*1000)))
+					PrevSnowTempUpper <- max(min(0,Tmin_C[i]),min(0,(SnowTempUpper[i-1]+min(-SnowTempUpper[i-1]+Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000))))) 
+#					PrevSnowTempLower <- max(min(0,Tmin_C[i]),min(0,(SnowTempLower[i-1]+min(-SnowTempLower[i-1]+G/((SnowDensity[i-1]*SnowDepth[i-1]-SurfLayermax)*SnowHeatCap*1000)))))
+					PrevSnowTempLower <- max(min(0,Tmin_C[i]),min(0,(SnowTempLower[i-1]+min(-SnowTempLower[i-1]+G/((SnowWaterEq[i-1]-SurfLayermax)*SnowHeatCap*1000)))))
 					if(NewSnowWatEq[i] >= SurfLayermax) { # new snow >= surface layer, surface is all new snow, base is old snow and any excess new snow
 						# new upper temp = air temp
 						SnowTempUpper[i] <- Tav[i]
