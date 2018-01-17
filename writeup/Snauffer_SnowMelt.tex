@@ -1,0 +1,307 @@
+\documentclass[12pt]{article}
+\usepackage{mathptmx} % use Times Roman font equivalent
+
+\usepackage[doublespacing]{setspace} % double space the document
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+\usepackage[export]{adjustbox}
+
+\usepackage{float} % controls floating of images
+
+\usepackage{color} % highlighting
+\newcommand{\hilight}[1]{\colorbox{yellow}{#1}} % does not wrap
+
+\usepackage{soul} % \hl does wrapping highlighting
+% need to install separately:  sudo apt-get install texlive-latex-extra
+
+\usepackage{amsmath} % typesetting of equations
+
+\usepackage{makecell} % formats a cell (e.g. splitting text)
+
+\usepackage{textcomp} % for symbols (like degrees)
+
+\usepackage{natbib}
+% \renewcommand*{\refname}{Bibliography}
+
+\renewcommand\thetable{\Roman{table}} % use roman numerals in table
+
+\hyphenation{ERA-Land ERA-Interim MERRA-Land}
+
+\title{Modifying a Snow Model from Single to Dual Layer Design}
+ 
+\author{}
+\date{}
+
+\pdfinfo{
+  /Title    ()
+  /Author   ()
+  /Creator  ()
+  /Producer ()
+  /Subject  ()
+  /Keywords ()
+}
+
+\begin{document}
+\maketitle
+\begin{center}
+Andrew M. Snauffer (asnauffer@eos.ubc.ca)\textsuperscript{1*}
+\newline
+\newline
+\footnotesize{
+\textsuperscript{1}\textit{
+Department of Earth, Ocean and Atmospheric Sciences,
+The University of British Columbia,
+Vancouver, BC V6T 1Z4,
+Canada}
+}
+\end{center}
+
+\begin{footnotesize}
+\noindent
+*Correspondence to: Andrew M. Snauffer, 
+Department of Earth, Ocean and Atmospheric Sciences,
+The University of British Columbia,
+Vancouver, BC V6T 1Z4,
+Canada
+\\E-mail: asnauffer@eos.ubc.ca
+\\Office: +1-604-822-5691
+\\Mobile: +1-778-986-3319
+
+\end{footnotesize}
+
+\newpage
+
+\section{Abstract}
+Regional-scale estimates of snow water equivalent (SWE) are challenging in alpine regions, particularly in areas of high accumulation and heavy land cover, suggesting efforts to improve these estimates may benefit from an evaluation of existing gridded products.  Gridded SWE products comprising four reanalysis datasets (ERA-Interim, ERA-Interim/Land, MERRA and MERRA-Land), two land data assimilation system datasets (GLDAS1 and GLDAS2) and two observationally-based products (CMC and GlobSnow) have been compared with in-situ measurements over five physiographic regions in British Columbia (BC), Canada.  Time series were generated for each survey month (January through June), and median correlation, bias and mean absolute error (MAE) values were found for each product and physiographic region.  
+The best performance in correlation and magnitude of bias and MAE was
+seen in areas of lowest SWE accumulation and land relief (e.g. the Great Plains of northern BC), while poorer performance was seen in regions of high accumulation and complex topography (Columbia and Rocky Mountains and Coast Mountains).
+Overall, the performance ranking order is ERA-Interim/Land (best), GLDAS2, MERRA, CMC, GLDAS1, MERRA-Land, GlobSnow and ERA-Interim.
+
+\bigskip
+\noindent KEY WORDS \: snow water equivalent; alpine regions; snow course; gridded product; reanalysis; LDAS
+
+\section{Introduction}
+Winter snow is the primary source of moisture storage over much of western North America in winter and spring (Wood and Lettenmaier, 2006). Snow water equivalent (SWE) is defined as the depth of a layer of water having the same mass and area. For hydrologists, SWE is more useful than snow depth because snow density has been shown to vary from 50 kg/m\textsuperscript{3} for new snow at low air temperatures (Cordisco \textit{et al}., 2006) to over 550 kg/m\textsuperscript{3} for ripened snowpacks (Anderton \textit{et al}., 2003). While there are numerous ways to measure site-specific SWE, finding accurate distributions of SWE on a regional scale can be a challenging task.  Over large regions, remote sensing of microwave radiation signatures has been used to infer SWE.
+Microwave remote sensing of snowpack emerged as a research effort with the launch of Nimbus-7 in 1979. Among the instruments carried by the satellite was the Scanning Multichannel Microwave Radiometer (SMMR) capable of measuring microwave radiation at 6.6, 10.7, 18.0, 21.0, and 37.0 GHz with a resolution of 25 km. The ability to use microwave radiation to sense snowpack parameters lies in differences in absorption and scattering at different wavelengths (Chang \textit{et al}., 1987). In summary there are two contributing sources of microwave emission from snow accumulated on the earth's surface, the snow itself and the underlying ground. Snow particles within a snowpack differentially scatter and absorb microwave radiation of different frequencies coming from the underlying ground. For microwave radiation of wavelengths comparable to typical snow crystal sizes of less than 1 cm (e.g. 37 GHz radiation of wavelength 0.8 cm), the dominant effect is scattering. Wavelengths larger than the crystal size (lower frequencies) will be primarily subject to absorption, and the measured brightness temperatures at these wavelengths approach the snowpack physical temperature. Microwaves at smaller wavelengths (higher frequencies) more easily penetrate the snowpack, giving ground temperature-like signature. However, snowpacks with higher SWE tend to more strongly block these ground signatures. By finding differences in microwave intensities at various frequencies, snowpack characterizations may be made based on their microwave signatures. Various algorithms have been developed to exploit the differences in microwave intensity and retrieve SWE directly from these signatures. Several of these utilize differences between the 19 and 37 GHz bands (Chang \textit{et al}., 1987; Tong \textit{et al}., 2010). New snow with smaller grain size was found to be best detected using higher frequency indices (150 GHz) and hence these frequencies were used 
+in the retrieval algorithms (Kongoli \textit{et al}., 2004). 
+
+While the science behind remote microwave sensing of snowpack has been developing for many years, several environmental factors have limited increases in the accuracy of the methods. One of the most challenging is vegetation. Forests still cover large swaths of land throughout North America and especially in British Columbia (BC), Canada. The difficulties presented by forested areas are two-fold. Foliage changes the upwelling microwave signatures, and forest cover also influences the accumulation and ablation of the snow itself after it reaches the ground.  Plants are a strong absorber of microwave radiation in the 37 GHz band and block much of the upwelling microwave radiation. 
+Forests also exhibit a strong influence on snow distributions by impacting accumulation and ablation rates. Forest canopies intercept snowfall and facilitate its return to the atmosphere by sublimation. Forest cover, also a significant factor in snowmelt rate, alters both incoming shortwave and outgoing longwave radiation and changes sensible and latent heat fluxes by reducing wind speed. These processes may reduce snow accumulation by up to 40\% and ablation rates by up to 70\% relative to nearby open areas (Varhola \textit{et al}., 2010).  
+Forest cover is the most highly correlated variable for changes in snow accumulation and melting.
+
+Following land cover, elevation is the second best predictor of changes in snow cover (Varhola \textit{et al}., 2010). 
+Sites at higher altitudes experience lower temperatures, resulting in earlier starts to the snow season as well as later melting than comparable sites at lower elevations.  The effect of land cover is itself affected by elevation, with larger differences in melting between forests and clearcuts seen at higher altitudes. Topography can also impede remote sensing of the snowpack by enhancing redistribution (i.e. falling or blowing from higher peaks into deeper valleys), complicating SWE retrieval algorithms.
+Previous studies of topographic controls on the redistribution of snow by wind (Anderton \textit{et al}., 2003) further highlight the connection and at times complex interplay between topography and land cover, both of which are also independent predictors of SWE.
+
+Beyond simple microwave retrieval algorithms, numerous tools have been developed to make large-scale estimates of SWE.  Land Data Assimilation Systems (LDAS) represent the land surface using ground-based observational data products and remotely sensed products in a land surface model (LSM).  NASA's Global Land Data Assimilation System (GLDAS) runs on one of four LSMs with two possible meteorological forcings (Rodell \textit{et al}., 2004).  GLDAS1 uses a combination of three meteorological forcing datasets for 1979 to present, while GLDAS2 is forced only by the Princeton meteorological dataset (Sheffield \textit{et al}., 2006) for the period 1948-2010.  
+
+Reanalysis products ingest a large number of earth observations over a long historical period into a numerical weather prediction model using an unchanging data assimilation scheme to produce a consistent climatological record.  The European Centre for Medium-Range Weather Forecasts (ECMWF) Reanalysis ERA-Interim (Dee \textit{et al}., 2011) uses the Integrated Forecast System (IFS) to assimilate land surface, oceanographic, atmospheric and spaceborne measurements from a host of sources.  Similar data sources are assimilated using the Goddard Earth Observing System Data Assimilation System Version 5 (GEOS-5) to produce the Modern-Era Retrospective analysis for Research and Applications, or MERRA (Rienecker \textit{et al}., 2011).  
+
+A special class of reanalysis products focuses on improving the representation of land surface processes.  A strategy for doing this is to run an offline replay of just the land processes with improved land surface models and/or forcings.  Such products exist for both ERA-Interim and MERRA.  ERA-Interim/Land (Balsamo \textit{et al}., 2015), hereinafter referred to as ERALand, utilizes both the improved land surface scheme HTESSEL (Hydrology-Tiled ECMWF Scheme for Surface Exchanges over Land) and precipitation adjustments based on the Global Precipitation Climatology Project (GPCP) v2.1.  MERRA-Land (Reichle \textit{et al}., 2011) likewise updates the land surface model to Fortuna-2.5 and incorporates the NOAA Climate Prediction Center ``Unified'' (CPCU) precipitation product.  
+
+Finally a number of products utilize observational datasets and perform mathematical operations to generate a gridded field.  Two such datasets are GlobSnow (Pulliainen, 2006), which bases its SWE product on the combination of satellite-based microwave radiometer and ground-based weather station data, and the Canadian Meteorological Centre (CMC) Daily Snow Depth Analysis (Brown and Brasnett, 2010), which starts with a first guess field and then builds gridded snow output from observations using optimal interpolation.  Further details on all these products are given in the description of methods.
+
+Inter-dataset spreads have been previously characterized for these datasets for the entire Northern Hemisphere (Mudryk \textit{et al}., 2015).  The datasets were found to exhibit higher consistency over boreal forest vs.\ alpine regions.  Much of British Columbia BC however is mountainous, particularly along the coast, throughout the north, and in the southeast.  As such, an evaluation of these products over BC may give insight into their relative performance in this topographically challenging area.
+
+The objective of this study is to compare various gridded products with in situ snow survey measurements over five physiographic regions of BC.  The general goal of effort is to determine which products best represent both the magnitude and the interannual variability in BC.  Such a result will also prove useful to efforts to utilize one or more of the evaluated products such as in a data fusion project using multiple predictors to generate a large-scale SWE field.
+
+\section{Methods}
+Because there is considerable variability in the climate and topography throughout the region, SWE is far from a homogeneous field.  To examine the performance of the evaluated gridded products in a spatial context, it is instructive to consider the evaluation statistics in various subdomains.  BC has five physiographic regions (Figure \ref{fig:BCPhysio}) that each have a distinctive topographic profile, climate context and mean SWE accumulation.  These regions thus provide a basis for such a spatial examination.  
+
+\subsection{Data Sources}
+In order to evaluate the usefulness of gridded products for estimating regional-scale SWE, values from several gridded snow products were compared with in situ manual snow survey measurements over province of BC. Classes of SWE gridded products include observational and satellite-based products, reanalyses, and land data assimilation systems.  These products are summarized in Table \ref{table:GriddedProductSummary} and described in further detail in this section.
+
+\subsubsection{Manual Snow Surveys (MSS)}
+Manual snow surveys are conducted at sites throughout BC by the Snow Survey Network Program for the BC River Forecast Centre (http://bcrfc.env.gov.bc.ca). 
+The results of these surveys are used to estimate flood risk and water supply outlook through freshet and summer.  Five or ten points along a course or path within the area are sampled at each site using a Standard Federal Snow Sampler, which extracts a column of snow and is then weighed to determine SWE.  Though the number of surveys in the historical record varies by survey month and year, the locations of sites remains consistent so that interannual comparisons are possible.  The surveys are conducted up to 8 times a year, once at beginning of months January through June and once mid-month in May and June.  There are currently 167 active and 216 inactive manual snow survey sites within the province, some with records going back as far as 1935.  For the purposes of this work, the manual snow surveys are considered ground truth for evaluating gridded products.
+
+\subsubsection{GLDAS}
+The Global Land Data Assimilation System (Rodell \textit{et al}., 2004) uses advanced land surface modeling and data assimilation to represent land surface state.  Satellite and ground observations are ingested and used to drive one of four offline land surface models (LSMs): Mosaic, CLM2, Noah, or VIC.  The Noah LSM is available at the highest resolution (0.25\textdegree) and is used for this study.
+
+Two different versions of GLDAS exist.  The primary difference in these versions is the application of meteorological forcings schemes.  GLDAS1 uses a combination of Climate Prediction Center's Merged Analysis of Precipitation (CMAP) for mean rain rate, Air Force Weather Agency (AFWA) shortwave and longwave radiation, and other meteorological forcings from NCEP's Global Data Assimilation System (GDAS), producing a high quality forcing set from mid-2001 onward.  GLDAS2 is forced by the Princeton meteorological dataset, a reanalysis product that uses observational products for bias correction, and is suitable for long term studies.  Other parameters are specified as follows.  Vegetation sub-grid variability is simulated by tiling a 1-km global vegetation dataset.  GLDAS1 land cover is based on the Advanced Very High Resolution Radiometer (AVHRR), while GLDAS2 uses the Moderate-resolution Imaging Spectroradiometer (MODIS).  Classification scheme is based on that used in the land surface model.  GLDAS1 remaps the various schemes to University of Maryland (UMD) vegetation types, but no such re-mapping is performed for GLDAS2; for instance the modified IGBP 20-category (16 IGBP vegetation classes plus 3 tundra classes) is used in the GLDAS2 Noah implementation.  Soils information for GLDAS1 is based on the Food and Agriculture Organization (FAO) Soil Map of the World, while for GLDAS2 soil texture maps from the LSM developers were used, which in the case of the Noah LSM is the FAO 16-category soil texture class.  Topography in both products is defined by the GTOPO30 Global 30 Arc Second ($\sim$1 km) Elevation Dataset.  GLDAS model data were downloaded from the Goddard Earth Sciences Data and Information Services Center (GES DISC) at http://disc.sci.gsfc.nasa.gov/hydrology/data-holdings on July 2, 2014.
+
+\subsubsection{ERA-Interim}
+The European Centre for Medium-Range Weather Forecasts (ECMWF) Reanalysis ERA-Interim (Dee \textit{et al}., 2011) is a global reanalysis product covering 1979 to present.  Data from a wide range of land surface, oceanographic, atmospheric and spaceborne measurement systems are assimilated by one integrated computer software system called the Integrated Forecast System (IFS).  The IFS version used to produce ERA-Interim (Cy31r2) was released in 2006.  Atmospheric and surface parameters are represented globally at a resolution of approximately 80 km (T255 spectral) at 60 vertical levels.  Atmospheric fields are available at 6 hour intervals with vertical integrals available daily, while surface fields are produced every 3 hours.  Monthly averages are available for surface, single level and model level fields, as well as forecast parameters for the four main synoptic hours:  0, 6, 12 and 18 UTC.
+
+ERA-Interim/Land (Balsamo \textit{et al}., 2015) is an offline land surface simulation produced with the latest ECMWF land surface model and driven by ERA-Interim meteorological forcings.  The Hydrology-Tiled ECMWF Scheme for Surface Exchanges over Land (HTESSEL) land surface model includes a number of enhancements to the TESSEL scheme used in ERA-Interim.  These enhancements include the use of globally varying soil textures, an improved runoff representation, a new snow scheme, a vegetation climatology based on satellite measurements, and an evaporation formulation using a lower stress threshold for bare soil.  Precipitation adjustments were also made by bias correcting the ERA-Interim precipitation estimates based on the Global Precipitation Climatology Project (GPCP) v2.1 data.  The ERA-Interim/Land reanalysis dataset has been compared and verified against numerous ground-based and remotely sensed observations, including those for soil moisture, snow depth, surface albedo, turbulent latent and sensible fluxes, and river discharges.  These comparisons have found that this dataset represents an overall improvement in land surface representation.
+
+\subsubsection{MERRA}
+The Modern-Era Retrospective analysis for Research and Applications (Rienecker \textit{et al}., 2011) reanalysis is a relatively new product created by NASA.  This reanalysis uses a fixed assimilation system, the Goddard Earth Observing System Data Assimilation System Version 5 (GEOS-5), to incorporate NASA's EOS observations into a coherent representation of mass and energy flows from the earth's surface to the upper atmosphere.  Native horizontal spatial resolution is 1/2\textdegree{} latitude $\times$ 2/3\textdegree{} longitude.  On land 2D diagnostics such as surface fluxes, vertical integrals and land states are available at 1-hour intervals, a key advance over other global reanalyses running at 6 hour intervals.  3-hourly atmospheric diagnostics on 42 pressure levels are available at coarser (1.25\textdegree) resolution, while analyses on 72 levels extending up through the stratosphere are available every 6 hours at native resolution.
+
+MERRA-Land (Reichle \textit{et al}., 2011) is an offline replay of the MERRA land model with two notable differences.  Precipitation forcing was based on merging the global gauge-based NOAA Climate Prediction Center ``Unified'' (CPCU) precipitation product (Chen \textit{et al}., 2008) with MERRA precipitation.  CPCU V1.0 was used for the period 1979-2005, and real-time CPCU was used for 2006 to present.  Secondly, the land surface model was updated to Fortuna-2.5, used in GEOS-5.7.2 operationally since August 2011.  As a result of these changes, documented improvements over MERRA including increases in runoff and snow depth skill suggest MERRA-Land is more accurate and is thus recommended for land surface studies (Reichle \textit{et al}., 2011).  Inconsistencies in the precipitation forcings for this product, however, have called into question its ability to accurately represent SWE (Mudryk \textit{et al}., 2015).
+
+\subsubsection{GlobSnow}
+GlobSnow (Pulliainen, 2006) is a product of the Finnish Meteorological Institute (FMI).  The algorithm relies on a forward model of observed brightness temperature ($T_{b}$) as a function of snow pack properties.  Effective snow grain size is estimated locally by fitting the results of a snow emission model to the measured brightness temperature channel difference most commonly used to derive SWE (19 GHz $-$ 37 GHz).  A background field of snow depths is then created by applying kriging interpolation to synoptic snow depth observations, and the associated background SWE is estimated using snow density reference information.  Finally retrieved SWE is found by weighting these values by their estimated variances.  The SWE product is mapped to the Equal-Area Scalable Earth Grid (EASE-Grid) at a resolution of 25 km.  Thematic accuracy is targeted to be 30-40 mm SWE for accumulations of less than 150 mm SWE.  The data available by public ftp includes all non-mountainous areas in the Northern Hemisphere.  A prototype ``mountains unmasked'' dataset including all of BC was obtained from FMI on May 26, 2013.
+
+\subsubsection{CMC}
+The Canadian Meteorological Centre (CMC) Daily Snow Depth Analysis Data (Brown and Brasnett, 2010) is a Northern Hemisphere subset of the CMC global daily snow depth.  The dataset is based on snow depth observations from surface synoptic observations (synops), meteorological aviation reports (metars) and special aviation reports (SAs).  A simple snow accumulation and melt model driven by outputs from the CMC Global Environmental Multiscale (GEM) forecast model is first used to create a first-guess snow field, and then the gridded snow depth output is then generated from observations using optimal interpolation.  Monthly SWE estimates are created using a table of mean monthly snow density values for various snow-climate land classes over Canada (tundra, taiga, maritime, ephemeral, prairie and alpine) and projected to a standard 24 km polar stereographic grid.  
+
+\subsection{Assignment of Grid Cells and Construction of Time Series}
+Each manual snow survey site was matched with its containing grid cell for each gridded product.  Interannual time series consisting of observations for all available years for each station and survey were constructed.  Up to 8 time series, one for each survey, potentially represent each station, depending on observation availability.  These time series were matched with corresponding time series for each gridded product using the closest days available from the product.  The following filters were applied.  For daily gridded products, SWE values represented on dates that differed from those of the observations by more than seven days were discarded.  
+Time series that were less than 10 years long were also discarded.  For monthly products, the window was $\pm$ 2 weeks.  Stations were then grouped by physiographic region.
+
+\subsection{Performance Scores}
+Using the constructed parallel time series between the evaluated gridded products and manual snow surveys, various performance metrics were calculated in order to describe their relationship.  
+
+\subsubsection{Pearson Correlation}
+The Pearson correlation is defined as the covariance of two time series, $x$ and $y$, divided by the product of the standard deviations of each respective series, as follows:
+\begin{equation}
+r_{xy} = \frac{\text{cov}(x,y)}{s_xs_y},
+\end{equation}
+where
+\begin{equation}
+\text{cov}(x,y) = \frac{1}{N-1}\sum_{i=1}^{N}(x_i-\overline{x})(y_i-\overline{y}),
+\end{equation}
+\begin{equation}
+s_x=\sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(x_i-\overline{x})^2},
+\end{equation}
+and likewise for $s_y$. $N$ is the number of observations in each interannual time series of survey months (January, February, etc.) for each station, and overbar denotes the mean.  Correlation characterizes the amount of linearity between each gridded product time series and its corresponding MSS time series.  Since the compared sequences are yearly time series, Pearson correlation values represent the ability of a gridded product to capture interannual variability in SWE as reflected in the manual snow series.  
+
+\subsubsection{Bias and MAE}
+Bias, the difference in the means of the time series of gridded products ($x$) and manual snow surveys ($y$), gives the average offset of gridded product values:
+\begin{equation}
+\text{bias} =  \overline{x} - \overline{y}.
+\end{equation}
+Mean absolute error (MAE), the average of the absolute differences in products ($x$) vs.\ measurements ($y$), represents a measurement of the error associated with each gridded product time series:
+\begin{equation}
+\text{MAE} = \frac{1}{N}\sum_{i=1}^{N}|x_i-y_i|.
+\end{equation}
+Hence bias gives a sense of the mean difference, whereas MAE shows the spread in those differences.  Because the amount of snow measured at MSS stations varies over a large range of values, the value of the bias and MAE also vary considerably.  
+
+\subsubsection{Normalized Bias and MAE}
+A bias or MAE value, seemingly large at a station receiving typically little snow, may appear small at a station receiving much more snow.
+To reflect this incongruity, the bias and MAE values were normalized before the values were consolidated and comparisons made.  One appropriate value for this normalization is mean peak SWE measured at each station.  This normalization ensures that gridded products with a bias or MAE less than the mean peak SWE will have a normalized value between $-$1 and 1, facilitating comparisons.  The value chosen for normalization was the mean observed April SWE for all years during 1980-2009 that were available.  
+
+\section{Results}
+
+\subsection{Temporal Evolution Across the Entire Province}
+Performance metrics between the evaluated gridded products and manual snow surveys have been calculated by survey month.  To consider the temporal evolution of product performance across the province, median values for each survey month have been found.  Plots of performance metrics are shown in Figure \ref{fig:SurveyCBM}.
+
+\subsubsection{Pearson Correlation}
+Decreasing median correlations indicate a decreasing ability for interannual discrimination through the season.  ERALand has the highest median correlation values, beginning the year at 0.8 and decreasing to 0.5 at end of season (Figure \ref{fig:SurveyCBM}a).  MERRA also begins strongly, with correlations close to those of ERALand in January through April (median correlation 0.6 to 0.7), but it then decreases dramatically in May and June.  CMC and GLDAS2 display a drop off in correlation toward season end similar to that of ERALand, but these products have lower overall values (median 0.6 decreasing to 0.4 at end of season).  Other products display relatively weak correlations (median 0.1 to 0.4) with significant seasonal drop offs that suggests almost no interannual discrimination at end of season.
+
+\subsubsection{Absolute Bias and MAE}
+Significant negative median bias values are indicative of underestimation of SWE in all gridded products.  Increasing median magnitude of bias (Figure \ref{fig:SurveyCBM}b) and median MAE (Figure \ref{fig:SurveyCBM}d) indicate challenges for gridded products to accurately represent the snowpack as the season progresses.  ERALand has the least negative bias and lowest median MAE of all products, followed by GLDAS2 and MERRA.  A trend of increasingly negative median bias values is consistent throughout the entire season for ERALand and CMC.  Other products display a change in this trend and in several cases a reversal to a less negative bias at season end.  Median MAE increases throughout the season for CMC and GLDAS1, while other products show a decrease in MAE in June, likely due to the dwindling reserves of SWE at that time of the year.
+
+\subsubsection{Normalized Bias and MAE}
+The magnitude of median normalized bias (Figure \ref{fig:SurveyCBM}c) and the median normalized MAE (Figure \ref{fig:SurveyCBM}e) increase throughout the season to maxima in April or May.  The decrease in the magnitude of the median normalized bias during the earlier part of the year are relatively smaller in ERALand and CMC than in the other products.  Median normalized MAE drops off sharply for the June survey.  These median normalized bias traces approximately follow the typical SWE accumulation curves throughout the season, suggesting bias and MAE are related to SWE accumulation. 
+
+\subsection{Physiographic Region Characterizations}  
+Median product scores for each station and survey month in each region are plotted as a heat map in Figure \ref{fig:Heatmap}.  
+Characterizations of the regions and the performance of the products in each region are presented in this section.
+
+\subsubsection{Great Plains}
+The Great Plains in the northeast corner of the province is the region of lowest relief.  Separated from the coast by hundreds of kilometers, this region receives lower overall accumulation totals than any other region of BC.  The mean 1980-2009 April SWE at stations in this region is 88 mm.  As a result, this region exhibits the most favorable statistics for the majority of surveys and gridded products.  For most evaluated products, the highest median correlations were found in the Great Plains, ranging from a low of 0.6 for MERRA to a high of 0.8 for CMC, with a median of 0.7.  The region also exhibited the lowest magnitude median absolute bias and MAE values, ranging from $-$2 to $-$33 mm SWE and 21 to 37 mm SWE respectively.  Though the range of SWE values is not as large as in other regions, normalizing the bias and MAE by the mean April SWE allows comparison of stations with differences in snow accumulation.  Notably, GlobSnow and CMC perform exceptionally well relative to other products in this region, exhibiting the lowest magnitude medians for normalized bias ($-$0.03) and normalized MAE (0.3).  This is the only region in which these two products perform well.  ERALand, MERRA and GLDAS2 have low magnitude of median normalized bias and MAE relative to other reanalyses and LDAS products.
+
+\subsubsection{Interior Plateau} 
+The Interior Plateau is the second lowest region of accumulation, based on mean April snow survey values, which averaged 283 mm SWE in this region for 1980-2009.  Despite the relatively low snow accumulations, correlation values are the lowest or second lowest of all regions for most gridded products.  The exceptions to this finding are GlobSnow and ERAInterim, where median correlations are intermediate relative to their corresponding values in other regions.  This finding suggests that while product performance generally improves with decreasing snow accumulation, the evaluated products are not capturing interannual variability as well as might be expected in this particular region.  Median normalized bias and MAE values here are very similar to those of the two regions of highest accumulation, except that ERALand values are slightly better in this region ($-$0.2 and 0.4 for normalized bias and MAE respectively) than in the highest accumulation regions ($-$0.4 and 0.5 respectively).
+
+\subsubsection{Northern and Central Plateaus and Mountains}
+The Northern and Central Plateaus and Mountains is a region of intermediate snow accumulation relative to other regions, with a mean measured April SWE value of 337 mm.  However it is the second best region in terms of normalized bias and MAE, and for ERALand and MERRA has values very close to those of the Great Plains ($-$0.2 and 0.3 respectively).  In this region there is an increasingly strong negative bias and higher MAE at end of season.  This suggests many of the evaluated products are melting off snow too early in the Northern and Central Plateaus and Mountains.  
+
+\subsubsection{Columbia Mountains and Southern Rockies}
+The Columbia Mountains and Southern Rockies has the second highest snow accumulation in the province, with an average of 565 mm SWE measured during April surveys in this region.  There is a wide range of correlation values in this region, with product medians ranging from 0.3 to 0.8.  Despite the relatively high accumulations, the median correlations in this region are the second highest of all regions for three of the evaluated products:  GLDAS2, ERALand and MERRA.  Median normalized biases are comparable to those found in the Great Plains at $-$0.2, while median normalized MAE is only slightly higher at 0.4 for these same three products.  For other gridded products, the magnitudes of median normalized bias and MAE generally follow accumulations relative to other regions (i.e.\ regions with lower accumulations tend to have lower magnitudes of median normalized bias and MAE).
+
+\subsubsection{Coast Mountains and Islands}
+The Coast Mountains and Islands is the region of highest snow accumulation and the most challenging for the evaluated products to represent.  April mean SWE for 1980-2009 at stations here is 782 mm.  MERRA and ERALand show median correlations of 0.6 and 0.7 respectively, while that of GlobSnow is less than 0.1.  ERALand has a median normalized bias of $-$0.3, as compared to other products which range from $-$0.5 to $-$0.8.  Median normalized MAEs of 0.4 for MERRA and ERALand are similarly lower than those of other evaluated products.  These results suggest ERALand and MERRA best represent both the amount and interannual variability of snow in the Coast Mountains and Islands.
+
+
+\subsection{Ranking of Gridded Products}
+Across the province, 256 manual snow survey stations of adequate record length across five physiographic regions reported up to eight surveys per station.  An effective way to summarize the results is to rank the products by metric.  The method applied by Decker \textit{et al}. (2012) was applied to determine this ranking.  For each station and survey, the products were ranked based on the scores for evaluated metrics.  
+Correlation, MAE and the absolute value of bias were separately ranked, with rank one being the best.  Only stations and surveys for which all products yielded a given metric were used in the ranking.  The rank numbers were then averaged to find a mean rank score for each product relative to the others.  The mean ranks are presented in Figure \ref{fig:MeanRank}.  
+
+Overall ERALand ranked first in correlation and second in bias and MAE.  GLDAS2 had the best bias and MAE but trailed both ERALand and MERRA in correlation.  MERRA ranked second in correlation but near the middle of the ranking in bias and MAE, as did CMC in all metrics.  The remaining products, namely GLDAS1, MERRALand, GlobSnow and ERAInterim, were ranked fifth through eighth across all three metrics, respectively.  An overall ranking for each metric and product is determined based on these mean rank scores, as summarized in Table \ref{table:GriddedProductRank}.
+
+
+\subsection{Confidence Intervals}
+Differences in gridded products were evaluated for statistical significance.  For each calculated performance score, differences were found between each product compared to all others in overlapping stations and surveys.  95\% confidence intervals on these differences were determined by calculating the verification statistic, in this case the median, on 5000 bootstrap samples of differences as described in Jolliffe (2007).  If the middle 95\% of these medians (2.5 percentile to 97.5 percentile) are entirely positive or negative, there is a statistically significant difference in the products.  
+To be considered better performing, correlations for the evaluated product must have a statistically significant difference above that of the compared product, whereas the magnitude of the bias and MAE must be below that of the compared product.  If the middle 95\% of the bootstrapped median differences contains both positive and negative members, there is no statistically significant difference in the products.  
+
+Table \ref{table:CI} lists each of the evaluated product pairs and indicates the better performing product for performance scores derived from comparisons with manual snow surveys, including correlation, MAE, normalized MAE (MAE$_n$), bias and normalized bias (bias$_n$).  Letter A or B indicates the column of the product that performs statistically better; an equal sign (``='') indicates no statistically significant difference.  The products are listed in order of overall performance ranking.  Each evaluated product in column A outperforms the compared products below it in the performance ranking for most calculated scores.  Exceptions to this include an edge in correlations that ERALand displays over GLDAS2, while there is otherwise no statistically significant difference between these products.  GLDAS2 outperforms both MERRA and CMC by all measures except correlation.  Few significant differences are found in the comparison of MERRA and CMC as well as that of GLDAS1 and MERRALand.  ERAInterim is statistically outperformed by all other products.
+
+
+\section{Discussion and Conclusion}
+An assessment of eight SWE gridded products has been conducted.  In situ measurements taken during manual snow surveys have been compared with values reported for the encompassing grid cells of these gridded products across British Columbia by survey and physiographic region.  The comparison of point measurements to areal averages provided by the gridded products is clearly imperfect.  Single location snow measurements cannot appropriately represent entire cells when applied to coarse grid SWE datasets (Mudryk \textit{et al}., 2015).  Given the sparseness of measurements, it is not possible to fully capture subgrid spatial variability.  SWE is strongly influenced by topographic controls and in particular elevation.  Differences between station altitude and mean grid cell elevation can lead to over- or underestimation, and thus some level of irreducible error.  This caveat aside, correlations computed using interannual time series can show ability to reproduce interannual deviations.  Furthermore seasonal trends in bias and MAE would be largely unaffected by the absolute values of these measures.  As such the comparisons employed in this work can yield some insight into the performance of the products, issues of scale notwithstanding.
+
+Throughout the province, interannual correlations between manual snow surveys and all evaluated gridded products show a decrease in median value through the snow season, suggesting a lower ability to discern interannual trends for later surveys.  ERALand has the highest median correlations, followed by MERRA, CMC and GLDAS2, though MERRA performs particularly poorly at season end.  The remaining evaluated products exhibit weak positive correlations that further degrade as the season progresses.  The evaluated gridded products on average underestimate SWE across the region as evidenced by negative bias values determined at a majority of manual snow survey stations.  The lowest magnitude bias and MAE values are displayed by, in order, ERALand, GLDAS2 and MERRA.  For most products MAEs increase through the season to a peak in April or May before falling off, suggesting increasing accumulations of snow are increasingly hard to capture.  ERALand and CMC display this trend through the season end, while other products show reductions in MAE and bias magnitude in the final surveys of the season.
+
+Physiographic region breakdowns generally yield better performance statistics in regions of lower SWE accumulation, though there are exceptions to this generalization.  The Great Plains in the northeast of the province receives the lowest overall snow totals.  Median correlations in this region range from 0.6 to 0.8, while median bias and MAE values are $-$2 to $-$33 mm SWE and 21 to 37 mm SWE respectively.  This is the only region in which CMC and GlobSnow are strong performers, and indeed CMC is the strongest of those evaluated in this region.  The second lowest region of accumulation, the Interior Plateau exhibits relatively weak gridded product performance statistics.  Correlations in the region are the lowest or second lowest for most gridded products, and normalized bias and MAE values are largely in line with those of high accumulation regions.  The Northern and Central Plateaus and Mountains, a region of intermediate snow accumulation, has median normalized bias and MAE values that are second only to the Great Plains.  End of season MAE and bias magnitudes rise quickly however, suggesting an overestimation of the melt off rate.  The region of second largest SWE accumulation is the Columbia Mountains and Southern Rockies.  The region exhibits relatively high correlation values for three of the best performing products: GLDAS2, ERALand and MERRA.  Magnitudes of median normalized bias and MAE are only slightly higher than in the Great Plains and Northern and Central Plateaus and Mountains.  The Coast Mountains and Islands region has the highest mean SWE values and is consequently the most difficult to estimate.  Median correlations range from 0.1 to 0.7 and normalized bias values are $-$0.3 to $-$0.8.  MERRA and ERALand have the best performance statistics in this challenging region. 
+
+Slough and Kite (1992) compared the use of snow course measurement averages with a regression of microwave brightness temperatures and ground cover to determine SWE in a semi-distributed watershed model over the Kootenay River Basin in southeastern BC for the years 1988-1990.  While SWE statistics were not directly generated, the study found that a watershed model using remotely sensed gridded fields to create areal SWE averages better replicated observed runoff than did a similar model that averaged available point SWE measurements across basins.
+Carrera \textit{et al}. (2010) compared SWE and precipitation values for the 2005-2007 winter seasons at 13 snow survey sites in the Southern Canadian Rockies found using two different precipitation schemes, the Canadian Precipitation Analysis (CaPA) and the Global Environmental Multiscale (GEM) model.  For all SWE measured-simulated pairs at the native 15 km resolution, correlations were found to be 0.40 and 0.50 for the two precipitation schemes respectively.  The correlations found in this current study generally exceed those values, suggesting better performance.  Previously reported biases were $-$165 mm SWE for CaPA and $-$77 mm SWE for GEM.  
+The magnitudes of bias found in this current study for all products and stations across the province in a 30 year period are generally higher than those previously reported, suggesting poorer performance.  However, the best performing products found here have a median bias not far from those previously reported (e.g. GLDAS2 with median bias of $-$181 mm SWE in the Columbia Mountains and Southern Rockies).  
+Mudryk \textit{et al}. (2015) found relatively good correlations across the Northern Hemisphere among modern reanalyses such as ERALand and MERRA but not as high for GLDAS2.  
+Other studies have found superior performance of snow models driven by ERAInterim forcings with better SWE representation realized by improvements to the snow processes in the models themselves (Brun \textit{et al}., 2013; Dutra \textit{et al}., 2012).
+
+The calculated metrics determine a performance ranking as follows:  ERALand, GLDAS2, MERRA, CMC, GLDAS1, MERRALand, GlobSnow and ERAInterim.  
+A 95\% confidence interval was determined for the difference in each statistic between each pair of products.  The differences were found to be statistically significant except in the following comparisons.  ERALand has better correlations but not statistically different MAE and bias values than GLDAS2.  This is also the case for MERRA and CMC.  GLDAS2 has correlations that are statistically lower than those of MERRA and but not different from those of CMC, though GLDAS2 outperforms CMC in both MAE and bias.  GLDAS1 outperforms MERRALand in MAE but is otherwise statistically indistinguishable.  In all other cases, the established performance ranking holds such that higher ranking products statistically outperform those that are lower ranked.  
+
+This ranking informs applications requiring selection and prioritization of one or more of these SWE gridded products over BC or regions of similar climate and topography.  One such application will seek to combine gridded products to create improved estimates of SWE over BC using a data fusion approach based on machine learning.  Various combinations of products will be tested to determine the best performing model both in terms of accuracy and speed.  By focusing on combinations of the best performing products, the development time of such a model is expected to be reduced.
+
+
+% \section{Acknowledgements}
+Funding for this work was provided by the Canadian Sea Ice and Snow Evolution (CanSISE) Network funded through the Climate Change and Atmospheric Research (CCAR) initiative of Canada's Natural Sciences and Engineering Research Council (NSERC).  
+\citep{walter2005process}
+% The authors gratefully acknowledge the processing of and assistance with manual snow survey data provided by Tony Litke and Jessica Byers with the Ministry of Environment.  Juval Cohen and Jaakko Ikonen graciously provided the GlobSnow ``mountains unmasked'' dataset for inclusion in this study.  The authors also wish to thank colleagues at the Pacific Climate Impacts Consortium and Environment and Climate Change Canada, especially Markus Schnorbus, Francis Zwiers and Chris Derksen, for their comments and advice during the course of this work.
+
+
+\bibliographystyle{natbib}
+\bibliography{Snauffer_biblio}
+
+% \begin{thebibliography}{50}
+% 
+% \bibitem{Anderton2003}Anderton SP, White SM, Alvera B. 2003. Evaluation of spatial variability in snow water equivalent for a high mountain catchment. \textit{Hydrological Processes} \textbf{18:} 435-453.
+% 
+% \bibitem{Balsamo2015}Balsamo G, Albergel C, Beljaars A, Boussetta S, Brun E, Cloke H, Dee D, Dutra E, Muñoz-Sabater J, Pappenberger F, de Rosnay P, Stockdale T, Vitart F. 2015. ERA-Interim/Land: a global land surface reanalysis data set. \textit{Hydrology and Earth System Sciences} \textbf{19:} 389-407.
+% 
+% \bibitem{Brown2010}Brown RD, Brasnett B. 2010 (updated annually). \textit{Canadian Meteorological Centre (CMC) Daily Snow Depth Analysis Data.} Environment Canada, 2010. Boulder, Colorado USA: National Snow and Ice Data Center.	
+% 
+% \bibitem{Brun2013}Brun E, Vionnet V, Boone A, Decharme B, Peings Y, Valette R, Karbou F, Morin S. 2013. Simulation of northern eurasian local snow depth, mass, and density using a detailed snowpack model and meteorological reanalyses. \textit{Journal of Hydrometeorology} \textbf{14:} 203-219.
+% 
+% \bibitem{Carrera2010}Carrera ML, Bélair S, Fortin V, Bilodeau B, Charpentier D, Doré I. 2010. Evaluation of snowpack simulations over the Canadian Rockies with an experimental hydrometeorological modeling system. \textit{Journal of Hydrometeorology} \textbf{11:} 1123-1140.
+% 
+% \bibitem{Chang1987}Chang ATC, Foster JL, Hall DK. 1987. Nimbus-7 SMMR derived global snow cover parameters. \textit{Annals of Glaciology} \textbf{9:} 39-44.
+% 
+% \bibitem{Cordisco2006}Cordisco E, Prigent C, Aires F. 2006. Snow characterization at a global scale with passive microwave satellite observations. \textit{Journal of Geophysical Research} \textbf{111:} D19102.
+% 
+% \bibitem{Decker2012}Decker M, Brunke MA, Wang Z, Sakaguchi K, Zeng X, Bosilovich MG. 2012. Evaluation of the reanalysis products from GSFC, NCEP, and ECMWF using flux tower observations. \textit{Journal of Climate} \textbf{25:} 1916-1944.
+% 
+% \bibitem{Dee2011}Dee DP, Uppala SM, Simmons AJ, Berrisford P, Poli P, Kobayashi S, Andrae U, Balmaseda MA, Balsamo G, Bauer P, Bechtold P, Beljaars ACM, van de Berg L, Bidlot J, Bormann N, Delsol C, Dragani R, Fuentes M, Geer AJ, Haimberger L, Healy SB, Hersbach H, Hólm EV, Isaksen L, Kållberg P, Köhler M, Matricardi M, McNally AP, Monge-Sanz BM, Morcrette J-J, Park B-K, Peubey C, de Rosnay P, Tavolato C, Thépaut J-N, Vitart F. 2011. The ERA-Interim reanalysis: Configuration and performance of the data assimilation system. \textit{Quarterly Journal of the Royal Meteorological Society} \textbf{137:} 553-597.
+% 
+% \bibitem{Dutra2012}Dutra E, Viterbo P, Miranda PM, Balsamo G. 2012. Complexity of snow schemes in a climate model and its impact on surface energy and hydrology. \textit{Journal of Hydrometeorology} \textbf{13:} 521-538.
+% 
+% \bibitem{Jolliffe2007}Jolliffe IT. 2007. Uncertainty and inference for verification measures. \textit{Weather and Forecasting} \textbf{22:} 637-650.
+% 
+% \bibitem{Kongoli2004}Kongoli C, Grody NC, Ferraro RR. 2004. Interpretation of AMSU microwave measurements for the retrievals of snow water equivalent and snow depth. \textit{Journal of Geophysical Research} \textbf{109:} D24111.
+% 
+% \bibitem{Mudryk2015}Mudryk LR, Derksen C, Kushner PJ, Brown R. 2015. Characterization of Northern Hemisphere snow water equivalent datasets, 1981–2010. \textit{Journal of Climate} \textbf{28:} 8037-8051.
+% 
+% \bibitem{Pulliainen2006}Pulliainen J. 2006. Mapping of snow water equivalent and snow depth in boreal and sub-arctic zones by assimilating space-borne microwave radiometer data and ground-based observations. \textit{Remote Sensing of Environment} \textbf{101:} 257-269.
+% 
+% \bibitem{Reichle2011}Reichle RH, Koster RD, De Lannoy GJ, Forman BA, Liu Q, Mahanama SP, Touré A. 2011. Assessment and enhancement of MERRA land surface hydrology estimates. \textit{Journal of Climate} \textbf{24:} 6322-6338.
+% 
+% \bibitem{Rienecker2011}Rienecker MM, Suarez MJ, Gelaro R, Todling R, Bacmeister J, Liu E, Bosilovich MG, Schubert SD, Takacs L, Kim GK, Bloom S, Chen JY, Collins D, Conaty A, Da Silva A, Gu W, Joiner J, Koster RD, Lucchesi R, Molod A, Owens T, Pawson S, Pegion P, Redder CR, Reichle R, Robertson FR, Ruddick AG, Sienkiewicz M, Woollen J. 2011. MERRA: NASA's modern-era retrospective analysis for research and applications. \textit{Journal of Climate} \textbf{24:} 3624-3648.
+% 
+% \bibitem{Rodell2004}Rodell M, Houser PR, Jambor U, Gottschalck J, Mitchell K, Meng C-J, Arsenault K, Cosgrove B, Radakovich J, Bosilovich M, Entin JK, Walker JP, Lohmann D, Toll D. 2004. The Global Land Data Assimilation System. \textit{Bulletin of the American Meteorological Society} \textbf{85:} 381-394.
+% 
+% \bibitem{Sheffield2006}Sheffield J, Goteti G, Wood EF. 2006. Development of a 50-yr high-resolution global dataset of meteorological forcings for land surface modeling. \textit{Journal of Climate} \textbf{19:} 3088-3111.
+% 
+% \bibitem{Slough1992}Slough K, Kite GW. 1992. Remote sensing estimates of snow water equivalent for hydrologic modelling. \textit{Canadian Water Resources Journal} \textbf{17:} 323-330.
+% 
+% \bibitem{Tong2010}Tong J, Dery SJ, Jackson PL, Derksen C. 2010. Testing snow water equivalent retrieval algorithms for passive microwave remote sensing in an alpine watershed of western Canada. \textit{Canadian Journal of Remote Sensing} \textbf{36:} 74-86.
+% 
+% \bibitem{Varhola2010}Varhola A, Coops NC, Weiler M, Moore RD. 2010. Forest canopy effects on snow accumulation and ablation: An integrative review of empirical results. \textit{Journal of Hydrology} \textbf{392:} 219-233.
+% 
+% \bibitem{Wood2006}Wood AW, Lettenmaier DP. 2006. A test bed for new seasonal hydrologic forecasting approaches in the western United States. \textit{Bulletin of the American Meteorological Society} \textbf{87:} 1699-1712.
+% 
+% \end{thebibliography}
+
+
+\end{document}
+
+
+  
