@@ -80,12 +80,63 @@ Canada
 \noindent KEY WORDS \: snow water equivalent; alpine regions; snow course; 
 
 \section{Introduction}
-
+snow water equivalent (SWE)
 
 \section{Methods}
+Full energy balance snow models require many data inputs that may not be easily accessible, while simple temperature-index models need substantial information and are subject to significant uncertainties in the calibration of the melt factor.
+The SnowMelt function of the R package EcoHydRology \citep{fuka2014ecohydrology} addresses this challenge by estimating a portion of the data necessary to the energy balance such that the model works using no more data than a simple temperature-index model.
+A full accounting of those approximations is given in \citet{walter2005process}.
 
-\citep{walter2005process}
+A listing of the SnowMelt source code is presented Appendix A.
+A summary of the function procedure follows.
+\begin{enumerate}
+  \item Set relevant constants (latent heat of vaporization and fusion, snow heat capacity, etc.)
+  \item Convert inputs: mean daily temperature, daily snow based on precipitation and mean temperature, new snow density based on mean temperature \citep{goodison1981measurement}, resistance to heat transfer \citep{campbell1977introduction}, and cloudiness and atmospheric emissivity \citep{fuka2014ecohydrology}
+  \item For time step 1:
+  \begin{enumerate}
+    \item Set starting SWE and snow depth using initial input values for snow depth and density
+    \item Calculate snow albedo based on ground albedo or amount of new snow, if new snow has been received
+    \item Calculate insolation based on latitude, Julian date, min and max daily temperature, albedo, forest cover, slope, and aspect
+    \item Calculate sensible heat exchanged based on mean daily temperature, snow temperature, and thermal resistance
+    \item Calculate vapor energy based on latent heat of vaporization, thermal resistance, and saturated vapor density at both snow and atmospheric temperatures
+    \item Calculate daily longwave radiation based on the Stefan-Boltzman equation
+    \item Calculate net energy based on insolation, atmospheric and terrestrial longwave radiation, sensible heat, vapor energy, ground conduction, and precipitation heat
+    \item Calculate snow density by blending existing and new snow
+    \item Calculate snowmelt based on net energy above that required to raise snow temperature to the melting point
+    \item Calculate SWE by summing changes (old + new - melt) and find resulting snow depth by dividing by density
+  \end{enumerate}
+  \item Loop through remaining time steps:
+  \begin{enumerate}
+    \item Calculate snow albedo as above
+    \item Calculate insolation as above
+    \item If there is snow on the ground, set a density coefficient and recalculate snow temperature
+      % 		SnowTemp[i] <- max(min(0,Tmin_C[i]),  # can't be 
+      % 				   min(0,(SnowTemp[i-1]+
+      % 					  min(-SnowTemp[i-1],
+      % 	Energy[i-1]/((SnowDensity[i-1]*SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
+    \item Recalcalculate saturated vapor density at new snow temperature
+    \item Calculate sensible heat exchanged as above
+    \item Calculate vapor energy as above
+    \item Calculate daily longwave radiation as above
+    \item Calculate net energy and if positive, set a constant to increase snow density
+    \item Calculate snow density by blending existing and new snow, using the previous snow density adjusted such that it exponentially approaches 450
+      % 		if(SnowDepth[i-1]+NewSnow[i])>0) {
+      % 			SnowDensity[i] <- min(450,
+      % 					      ((SnowDensity[i-1]+k*30*(450-SnowDensity[i-1])*exp(-DCoef[i]))*SnowDepth[i-1] + NewSnowDensity[i]*NewSnow[i])/(SnowDepth[i-1]+NewSnow[i]))
+      % 		} else {
+      % 			SnowDensity[i] <- 450
+      % 		}
+    \item Calculate SWE by summing changes (old + new - melt) and find resulting snow depth by dividing by density
+  \end{enumerate}
+\end{enumerate}
 
+
+%HERE
+but multi-layer works better, even 2 layers (?Jost)
+
+objective - move to 2 layer design
+
+approach
 
 
 % \subsection{Performance Scores}
