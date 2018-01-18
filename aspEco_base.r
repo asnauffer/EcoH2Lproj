@@ -1,18 +1,22 @@
-# reads ASP data from a csv file
 # runs SnowMelt from EcoHydRology using T & P data
+# melt water
+# is snow coming in at atm temp
 
 #set environment on Drew's machines
-if(R.version[1]=="x86_64-pc-linux-gnu") {
-  library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-  library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-#   setwd("/net/home/asnauffer/Documents/PhD/Rcode")
-  setwd("/net/home/asnauffer/Documents/PhD/EcoH2Lproj/")
-} else {
-  library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
-  library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
-#  setwd("C:/Users/Drew/Documents/PhD/Rcode")
-  setwd("C:/Users/Drew/Documents/PhD/EcoH2Lproj")
-}
+library("EcoHydRology")
+library("R.matlab")
+setwd("~/PhD/EcoH2Lproj/")
+# if(R.version[1]=="x86_64-pc-linux-gnu") {
+#   library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
+#   library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
+# #   setwd("/net/home/asnauffer/Documents/PhD/Rcode")
+#   setwd("/net/home/asnauffer/Documents/PhD/EcoH2Lproj/")
+# } else {
+#   library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
+#   library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
+# #  setwd("C:/Users/Drew/Documents/PhD/Rcode")
+#   setwd("C:/Users/Drew/Documents/PhD/EcoH2Lproj")
+# }
 
 source('SnowMelt.R')
 source('SnowMelt2L.R')
@@ -32,8 +36,8 @@ out_asp <- vector("list",1)
 
 yrct <- 0
 
-aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
-# aspstnnums <- 1:71
+# aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
+aspstnnums <- 1:71
 
 #for(ireg in c(1:3,5)){
 #  aspstnnums <- which(aspstnsel==ireg)
@@ -79,7 +83,7 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
     logdiscard <- logbadtp | logswenop # logical - discard bad T or P or when SWE increases with no P
     
     for(iyr in aspYunique){
-      print(paste(stnname[istn],iyr,"running"))
+      #print(paste(stnname[istn],iyr,"running"))
       dateseasoni = paste(iyr-1,'-10-01',sep='')
       dateseasonf = paste(iyr,'-07-01',sep='')
       logyr <- aspalldate>=dateseasoni & aspalldate<=dateseasonf # select dates for current snow year
@@ -100,33 +104,41 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
         next
       }
       # run and time SnowMelt
-      yrct <- yrct+1
       asp <- aspall[logvalidmodel,]
       aspswe <- asp$Snow.Water.Equivalent
       aspdate <- as.Date(asp$Date,format=fmt)
       
       # stock SnowMelt
-        exectime <- round(system.time({
-          sm_asp <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
+      exectime <- tryCatch(round(system.time(
+        sm_asp <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
                              Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
-        }),3)[3]
+      ),3)[3],error = function(e) e)
+      if(inherits(exectime, "error")) {
+        print(paste('SnowMelt ERROR: stn',istn,stnname[istn],iyr,exectime))
+      } else {
         smswe <- sm_asp$SnowWaterEq_mm
         mae <- mean(abs(aspswe[logvalidcompareyr]-smswe[logvalidcompareyr]))
         smsm <- sm_asp$SnowMelt_mm
+      }
 
       # SnowMelt with ground conduction G=0
+      exectimeG0 <- tryCatch(round(system.time(
         sm_aspG0 <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
                            Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn], G=0)
+      ),3)[3],error = function(e) e)
+      if(inherits(exectimeG0, "error")) {
+        print(paste('SnowMeltG0 ERROR: stn',istn,stnname[istn],exectimeG0))
+      } else {
         smsweG0 <- sm_aspG0$SnowWaterEq_mm
         maeG0 <- mean(abs(aspswe[logvalidcompareyr]-smsweG0[logvalidcompareyr]))
-
+      }
       # 2L SnowMelt 
         exectime2L <- tryCatch(round(system.time(
           sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
         ),3)[3],error = function(e) e)
         if(inherits(exectime2L, "error")) {
-          print(exectime2L)
+          print(paste('SnowMelt2L ERROR: stn',istn,stnname[istn],iyr,exectime2L))
           next
         }
         smswe2L <- sm_asp2L$SnowWaterEq_mm
@@ -138,9 +150,15 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
         smsml2L <- sm_asp2L$SnowMeltLower_mm
       
       # 2L SnowMelt with ground conduction G=0
+      exectime2LG0 <- tryCatch(round(system.time(
         sm_asp2LG0 <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn], G=0)
-        smswe2LG0 <- sm_asp2LG0$SnowWaterEq_mm
+      ),3)[3],error = function(e) e)
+      if(inherits(exectime2LG0, "error")) {
+        print(paste('SnowMelt2LG0 ERROR: stn',istn,stnname[istn],exectime2LG0))
+        next
+      }
+      smswe2LG0 <- sm_asp2LG0$SnowWaterEq_mm
         mae2LG0 <- mean(abs(aspswe[logvalidcompareyr]-smswe2LG0[logvalidcompareyr]))
 
       # accumulation for Tav<=0
@@ -179,6 +197,7 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
                         sumswenop=sumswenop,
                         numnaswe=sum(logyr & lognaswe)
       )
+      yrct <- yrct+1
       if(yrct==1){
         yearrun <- yri
         yearrunfull <- yrfi
@@ -191,39 +210,64 @@ aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
         print('sumswebadtp = NA')
       }
       #plot asp and snowmelt curves
-      linew <- 3
+      linew <- 5
 #       out_plot <- paste(istn,try({
-        fnout <- paste("plots/temps/Tswe12UL_mod2_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
+        fnout <- paste("plots/temps/mod7/swe12_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,"_G0.jpg",sep="")
 #         fnout <- paste("plots/",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
-        jpeg(fnout,width=480*3,height=480*2,pointsize=24,quality=100)
-        layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+        jpeg(fnout,width=480*4,height=480*2,pointsize=24,quality=100)
+#        layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+        par(mfrow=c(2,1)) # setup layout
+        par(xpd=TRUE) # turns off clipping so legend is visible
 #        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
 #        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(min(-smsm,-smsm2L,-smsmu2L,-smsml2L,na.rm=T),max(aspswe,smswe,smswe2L,na.rm=T)))
-        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,na.rm=T)))
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,xlim=c(min(aspdate),max(aspdate)+70),ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T)), bty='L')
         lines(aspdate,smswe,col="red",lwd=linew)
 #        lines(aspdate,-smsm,col="darkred",lwd=linew)
 #        lines(aspdate,smsweG0,col="darkred",lwd=linew)
-        lines(aspdate,smswe2L,col="blue",lwd=linew-1)
-        lines(aspdate,smsweu2L,col="lightblue",lwd=linew-1) # DROPPING BELOW THRESHOLD WHEN LOWER LAYER SWE > 0
-        lines(aspdate,smswel2L,col="darkblue",lwd=linew-1)
+        lines(aspdate,smswe2L,col="lightblue",lwd=linew)
+legtxt <- c("ASP measured","EcoH modeled","EcoH 2L albedoThreshold=0.3")
+legcol <- c("black","red","lightblue")
+nextlegcol <- c("skyblue","blue","darkblue","midnightblue")
+#nextlegcol <- c("darkblue","blue","skyblue","lightblue")
+albedos <- c(0.2,0.1,0.05,0)
+for(ia in 3){#1:length(albedos)){
+exectime2L <- tryCatch(round(system.time(
+  sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
+                         Tmax_C=asp$Temp..Max.,Tmin_C=asp$Temp..Min.,lat_deg=stnlat[istn],G=0,albedoThreshold=albedos[ia])
+),3)[3],error = function(e) e)
+if(inherits(exectime2L, "error")) {
+  print(paste('SnowMelt2L ERROR: stn',istn,stnname[istn],iyr,'ia=',ia,exectime2L))
+} else {
+smswe2L <- sm_asp2L$SnowWaterEq_mm
+legtxt <- c(legtxt,paste('EcoH 2L albedoThreshold=',albedos[ia]))
+legcol <- c(legcol,nextlegcol[ia])
+lines(aspdate,smswe2L,col=nextlegcol[ia],lwd=linew-ia)
+}
+}
+#         lines(aspdate,smsweu2L,col="lightblue",lwd=linew-1) # DROPPING BELOW THRESHOLD WHEN LOWER LAYER SWE > 0
+#         lines(aspdate,smswel2L,col="darkblue",lwd=linew-1)
 #        lines(aspdate,-smsm2L,col="darkblue",lwd=linew-1)
 #        lines(aspdate,smswe2LG0,col="darkblue",lwd=linew)
-#        lines(aspdate,smsweaccum,col="green",lwd=linew)
-#        lines(aspdate,smsweaccumwarm,col="darkorange",lwd=linew)
-        title(paste("Station",stnname[istn],iyr,"1L exec time =",exectime,"MAE =",round(mae,0),"; 2L exec time =",exectime2L,"MAE =",round(mae2L,0)))
+       lines(aspdate,smsweaccum,col="darkgreen",lwd=linew)
+       lines(aspdate,smsweaccumwarm,col="orange",lwd=linew)
+      legtxt <- c(legtxt,'Total SWE accum (Tav<=0)','Total precip accum')
+      legcol <- c(legcol,'darkgreen','orange')
+#        title(paste("Station",stnname[istn],iyr,"1L exec time =",exectime,"MAE =",round(mae,0),"; 2L exec time =",exectime2L,"MAE =",round(mae2L,0)))
+        title(paste("Station",stnname[istn],iyr,"MAE =",round(mae,0),"; 2L MAE =",round(mae2L,0)))
 #        legend("topleft",c("ASP measured","EcoH modeled","EcoH modeled G=0","EcoH 2L modeled","EcoH 2L modeled G=0","P(Tav<0) measured","Total P measured"),
 #               col=c("black","red","darkred","blue","darkblue","green","darkorange"),lwd=linew,bty="n")
-        legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled","EcoH 2L Upper","EcoH 2L Lower"),
-                col=c("black","red","blue","lightblue","darkblue"),lwd=linew,bty="n")
+#         legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled","EcoH 2L Upper","EcoH 2L Lower"),
+#                 col=c("black","red","blue","lightblue","darkblue"),lwd=linew,bty="n")
+legend(max(aspdate),max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T),legtxt,col=legcol,lwd=linew,bty="n")
         tempdata <- data.frame((asp$Temp..Max.+asp$Temp..Min.)/2,sm_asp$SnowTemp,sm_asp2L$SnowTempUpper,sm_asp2L$SnowTempLower)
-        plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="Tav (deg-C)",lwd=linew,ylim=c(min(tempdata),max(tempdata)))
-#        lines(aspdate,asp$Temp..Max.,col="red",lwd=1)
-#        lines(aspdate,asp$Temp..Min.,col="blue",lwd=1)
+        plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="T (deg-C)",lwd=linew,xlim=c(min(aspdate),max(aspdate)+70),ylim=c(min(tempdata),max(tempdata)), bty='L')
+        lines(aspdate,asp$Temp..Max.,col="lightgreen",lwd=1.5)
+        lines(aspdate,asp$Temp..Min.,col="darkgreen",lwd=1.5)
         lines(aspdate,sm_asp$SnowTemp,col="black",lwd=6)
         lines(aspdate,sm_asp2L$SnowTempUpper,col="red",lwd=5)
         lines(aspdate,sm_asp2L$SnowTempLower,col="blue",lwd=2)
-        legend("topleft",c("Tavg Air","EcoH 1L Snow T","EcoH 2L UpperL Snow T","EcoH 2L LowerL Snow T"),
-               col=c("green","black","red","blue"),lwd=linew,bty="n")
+        legend(max(aspdate),max(asp$Temp..Max.,na.rm=T),c("Tav Air","Tmax Air","Tmin Air","EcoH 1L Snow T","EcoH 2L UpperL Snow T","EcoH 2L LowerL Snow T"),
+               col=c("green","lightgreen","darkgreen","black","red","blue"),lwd=linew,bty="n")
         dev.off()
         print(paste(stnname[istn],iyr,round(mae,3),exectime,round(mae2L,3),exectime2L,fnout,"plotted"))
 #       }))
