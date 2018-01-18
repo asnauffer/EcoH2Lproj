@@ -27,6 +27,12 @@
 \usepackage{natbib}
 % \renewcommand*{\refname}{Bibliography}
 
+\usepackage{listings}
+
+\usepackage{url}
+
+\usepackage{pdflscape}
+
 \renewcommand\thetable{\Roman{table}} % use roman numerals in table
 
 \hyphenation{ERA-Land ERA-Interim MERRA-Land}
@@ -158,39 +164,22 @@ A summary of the changes implemented is as follows.
   \end{enumerate}
 \end{enumerate}
 
+An initial assessment of the SnowMelt2L performance revealed that the two-layer model was in many cases melting off snow earlier than the one-layer design.
+Further examinations of the code showed that the selection of the albedo decay function was based on a snow depth threshold set to 0.1 m in the code.
+This conditional was different from that specfied in \citep{walter2005process}, which specified a SWE threshold of 0.3 m water equivalent.
+A subsequent change in the code was made to allow for the specification of a SWE threshold, which was implemented as follows.
+\begin{enumerate}
+  \item Accept an optional input argument to SnowMelt2L that allows a SWE threshold to be checked for selection of an albedo decay function.
+  \item If there is new snow, set albedo as a function of the previous albedo and the amount of new snow.
+  \item Else if no albedo threshold is passed and the previous snow depth $<$ 0.1 m, decay the albedo linearly with time.
+  \item Else if an albedo threshold is passed and previous SWE $<$ that threshold, set the albedo as a function of SWE.
+  \item Else decay the albedo with time according to the empirical relationship developed by \citet{armycorps1960runoff}.
+\end{enumerate}
 
+A driver code for the SnowMelt model was also written.
+This code extracted snow pillow station information, performed error checking on the data, and plotted yearly time series for measured and modeled values.
+The driver code, called aspEcobase.R, is shown in Appendix C.
 
-% \subsection{Performance Scores}
-% Using the constructed parallel time series between the evaluated gridded products and manual snow surveys, various performance metrics were calculated in order to describe their relationship.  
-% 
-% \subsubsection{Pearson Correlation}
-% The Pearson correlation is defined as the covariance of two time series, $x$ and $y$, divided by the product of the standard deviations of each respective series, as follows:
-% \begin{equation}
-% r_{xy} = \frac{\text{cov}(x,y)}{s_xs_y},
-% \end{equation}
-% where
-% \begin{equation}
-% \text{cov}(x,y) = \frac{1}{N-1}\sum_{i=1}^{N}(x_i-\overline{x})(y_i-\overline{y}),
-% \end{equation}
-% \begin{equation}
-% s_x=\sqrt{\frac{1}{N-1}\sum_{i=1}^{N}(x_i-\overline{x})^2},
-% \end{equation}
-% and likewise for $s_y$. $N$ is the number of observations in each interannual time series of survey months (January, February, etc.) for each station, and overbar denotes the mean.  Correlation characterizes the amount of linearity between each gridded product time series and its corresponding MSS time series.  Since the compared sequences are yearly time series, Pearson correlation values represent the ability of a gridded product to capture interannual variability in SWE as reflected in the manual snow series.  
-% 
-% \subsubsection{Bias and MAE}
-% Bias, the difference in the means of the time series of gridded products ($x$) and manual snow surveys ($y$), gives the average offset of gridded product values:
-% \begin{equation}
-% \text{bias} =  \overline{x} - \overline{y}.
-% \end{equation}
-% Mean absolute error (MAE), the average of the absolute differences in products ($x$) vs.\ measurements ($y$), represents a measurement of the error associated with each gridded product time series:
-% \begin{equation}
-% \text{MAE} = \frac{1}{N}\sum_{i=1}^{N}|x_i-y_i|.
-% \end{equation}
-% Hence bias gives a sense of the mean difference, whereas MAE shows the spread in those differences.  Because the amount of snow measured at MSS stations varies over a large range of values, the value of the bias and MAE also vary considerably.  
-% 
-% \subsubsection{Normalized Bias and MAE}
-% A bias or MAE value, seemingly large at a station receiving typically little snow, may appear small at a station receiving much more snow.
-% To reflect this incongruity, the bias and MAE values were normalized before the values were consolidated and comparisons made.  One appropriate value for this normalization is mean peak SWE measured at each station.  This normalization ensures that gridded products with a bias or MAE less than the mean peak SWE will have a normalized value between $-$1 and 1, facilitating comparisons.  The value chosen for normalization was the mean observed April SWE for all years during 1980-2009 that were available.  
 
 
 \section{Results}
@@ -212,54 +201,42 @@ Funding for this work was provided by the Canadian Sea Ice and Snow Evolution (C
 \bibliographystyle{natbib}
 \bibliography{Snauffer_biblio}
 
-% \begin{thebibliography}{50}
-% 
-% \bibitem{Anderton2003}Anderton SP, White SM, Alvera B. 2003. Evaluation of spatial variability in snow water equivalent for a high mountain catchment. \textit{Hydrological Processes} \textbf{18:} 435-453.
-% 
-% \bibitem{Balsamo2015}Balsamo G, Albergel C, Beljaars A, Boussetta S, Brun E, Cloke H, Dee D, Dutra E, Muñoz-Sabater J, Pappenberger F, de Rosnay P, Stockdale T, Vitart F. 2015. ERA-Interim/Land: a global land surface reanalysis data set. \textit{Hydrology and Earth System Sciences} \textbf{19:} 389-407.
-% 
-% \bibitem{Brown2010}Brown RD, Brasnett B. 2010 (updated annually). \textit{Canadian Meteorological Centre (CMC) Daily Snow Depth Analysis Data.} Environment Canada, 2010. Boulder, Colorado USA: National Snow and Ice Data Center.	
-% 
-% \bibitem{Brun2013}Brun E, Vionnet V, Boone A, Decharme B, Peings Y, Valette R, Karbou F, Morin S. 2013. Simulation of northern eurasian local snow depth, mass, and density using a detailed snowpack model and meteorological reanalyses. \textit{Journal of Hydrometeorology} \textbf{14:} 203-219.
-% 
-% \bibitem{Carrera2010}Carrera ML, Bélair S, Fortin V, Bilodeau B, Charpentier D, Doré I. 2010. Evaluation of snowpack simulations over the Canadian Rockies with an experimental hydrometeorological modeling system. \textit{Journal of Hydrometeorology} \textbf{11:} 1123-1140.
-% 
-% \bibitem{Chang1987}Chang ATC, Foster JL, Hall DK. 1987. Nimbus-7 SMMR derived global snow cover parameters. \textit{Annals of Glaciology} \textbf{9:} 39-44.
-% 
-% \bibitem{Cordisco2006}Cordisco E, Prigent C, Aires F. 2006. Snow characterization at a global scale with passive microwave satellite observations. \textit{Journal of Geophysical Research} \textbf{111:} D19102.
-% 
-% \bibitem{Decker2012}Decker M, Brunke MA, Wang Z, Sakaguchi K, Zeng X, Bosilovich MG. 2012. Evaluation of the reanalysis products from GSFC, NCEP, and ECMWF using flux tower observations. \textit{Journal of Climate} \textbf{25:} 1916-1944.
-% 
-% \bibitem{Dee2011}Dee DP, Uppala SM, Simmons AJ, Berrisford P, Poli P, Kobayashi S, Andrae U, Balmaseda MA, Balsamo G, Bauer P, Bechtold P, Beljaars ACM, van de Berg L, Bidlot J, Bormann N, Delsol C, Dragani R, Fuentes M, Geer AJ, Haimberger L, Healy SB, Hersbach H, Hólm EV, Isaksen L, Kållberg P, Köhler M, Matricardi M, McNally AP, Monge-Sanz BM, Morcrette J-J, Park B-K, Peubey C, de Rosnay P, Tavolato C, Thépaut J-N, Vitart F. 2011. The ERA-Interim reanalysis: Configuration and performance of the data assimilation system. \textit{Quarterly Journal of the Royal Meteorological Society} \textbf{137:} 553-597.
-% 
-% \bibitem{Dutra2012}Dutra E, Viterbo P, Miranda PM, Balsamo G. 2012. Complexity of snow schemes in a climate model and its impact on surface energy and hydrology. \textit{Journal of Hydrometeorology} \textbf{13:} 521-538.
-% 
-% \bibitem{Jolliffe2007}Jolliffe IT. 2007. Uncertainty and inference for verification measures. \textit{Weather and Forecasting} \textbf{22:} 637-650.
-% 
-% \bibitem{Kongoli2004}Kongoli C, Grody NC, Ferraro RR. 2004. Interpretation of AMSU microwave measurements for the retrievals of snow water equivalent and snow depth. \textit{Journal of Geophysical Research} \textbf{109:} D24111.
-% 
-% \bibitem{Mudryk2015}Mudryk LR, Derksen C, Kushner PJ, Brown R. 2015. Characterization of Northern Hemisphere snow water equivalent datasets, 1981–2010. \textit{Journal of Climate} \textbf{28:} 8037-8051.
-% 
-% \bibitem{Pulliainen2006}Pulliainen J. 2006. Mapping of snow water equivalent and snow depth in boreal and sub-arctic zones by assimilating space-borne microwave radiometer data and ground-based observations. \textit{Remote Sensing of Environment} \textbf{101:} 257-269.
-% 
-% \bibitem{Reichle2011}Reichle RH, Koster RD, De Lannoy GJ, Forman BA, Liu Q, Mahanama SP, Touré A. 2011. Assessment and enhancement of MERRA land surface hydrology estimates. \textit{Journal of Climate} \textbf{24:} 6322-6338.
-% 
-% \bibitem{Rienecker2011}Rienecker MM, Suarez MJ, Gelaro R, Todling R, Bacmeister J, Liu E, Bosilovich MG, Schubert SD, Takacs L, Kim GK, Bloom S, Chen JY, Collins D, Conaty A, Da Silva A, Gu W, Joiner J, Koster RD, Lucchesi R, Molod A, Owens T, Pawson S, Pegion P, Redder CR, Reichle R, Robertson FR, Ruddick AG, Sienkiewicz M, Woollen J. 2011. MERRA: NASA's modern-era retrospective analysis for research and applications. \textit{Journal of Climate} \textbf{24:} 3624-3648.
-% 
-% \bibitem{Rodell2004}Rodell M, Houser PR, Jambor U, Gottschalck J, Mitchell K, Meng C-J, Arsenault K, Cosgrove B, Radakovich J, Bosilovich M, Entin JK, Walker JP, Lohmann D, Toll D. 2004. The Global Land Data Assimilation System. \textit{Bulletin of the American Meteorological Society} \textbf{85:} 381-394.
-% 
-% \bibitem{Sheffield2006}Sheffield J, Goteti G, Wood EF. 2006. Development of a 50-yr high-resolution global dataset of meteorological forcings for land surface modeling. \textit{Journal of Climate} \textbf{19:} 3088-3111.
-% 
-% \bibitem{Slough1992}Slough K, Kite GW. 1992. Remote sensing estimates of snow water equivalent for hydrologic modelling. \textit{Canadian Water Resources Journal} \textbf{17:} 323-330.
-% 
-% \bibitem{Tong2010}Tong J, Dery SJ, Jackson PL, Derksen C. 2010. Testing snow water equivalent retrieval algorithms for passive microwave remote sensing in an alpine watershed of western Canada. \textit{Canadian Journal of Remote Sensing} \textbf{36:} 74-86.
-% 
-% \bibitem{Varhola2010}Varhola A, Coops NC, Weiler M, Moore RD. 2010. Forest canopy effects on snow accumulation and ablation: An integrative review of empirical results. \textit{Journal of Hydrology} \textbf{392:} 219-233.
-% 
-% \bibitem{Wood2006}Wood AW, Lettenmaier DP. 2006. A test bed for new seasonal hydrologic forecasting approaches in the western United States. \textit{Bulletin of the American Meteorological Society} \textbf{87:} 1699-1712.
-% 
-% \end{thebibliography}
+\begin{landscape}
+\pagestyle{empty}
 
+\lstset{
+  basicstyle=\linespread{0.75}\footnotesize,
+  tabsize=2,
+  breaklines=true,
+  numbers=left
+}
+
+\section{Appendix A}
+The following is the SnowMelt source code, part of the EcoHydRology R package version 0.4.12, published April 4, 2014.
+It was obtained from \url{https://cran.r-project.org/web/packages/EcoHydRology/index.html} on January 9, 2018.
+
+\bigskip
+
+\lstinputlisting{../SnowMelt.R}
+
+\newpage
+\section{Appendix B}
+The following is the SnowMelt2L source code, the modified code developed in this work.
+
+\bigskip
+
+\lstinputlisting{../SnowMelt2L.R}
+
+\newpage
+\section{Appendix C}
+The following is the aspEco\_base.R source code, the driver code developed in this work which loads, executes and plots automated snow pillow (ASP) data and snow model results.
+
+\bigskip
+
+\lstinputlisting{../aspEco_base.r}
+
+
+\end{landscape}
 
 \end{document}
 
