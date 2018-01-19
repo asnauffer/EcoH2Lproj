@@ -1,6 +1,4 @@
-
-SnowMelt<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0, tempHt=1, windHt=2, groundAlbedo=0.25, 
-                   SurfEmissiv=0.95, windSp=2, forest=0, startingSnowDepth_m=0, startingSnowDensity_kg_m3=450, G=173){	
+SnowMelt<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0, tempHt=1, windHt=2, groundAlbedo=0.25, 		SurfEmissiv=0.95, windSp=2, forest=0, startingSnowDepth_m=0, startingSnowDensity_kg_m3=450){	
 ## Constants :
 	WaterDens <- 1000			# kg/m3
 	lambda <- 3.35*10^5			# latent heat of fusion (kJ/m3)
@@ -44,7 +42,7 @@ SnowMelt<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0, 
 	S 		<- vector(length=length(precip_mm))	#	Solar Radiation (kJ/m2/d)
 	La 		<- Longwave(AE, Tav)					#	Atmospheric Longwave Radiation (kJ/m2/d)
 	Lt 		<- vector(length=length(precip_mm))	#	Terrestrial Longwave Radiation (kJ/m2/d)
-#	G 		<- 173								#	Ground Condution (kJ/m2/d) 
+	G 		<- 173								#	Ground Condution (kJ/m2/d) 
 	P 		<- Cw * R_m * Tav					# 	Precipitation Heat (kJ/m2/d)
 	Energy 	<- vector(length=length(precip_mm))	# Net Energy (kJ/m2/d)
 
@@ -52,7 +50,7 @@ SnowMelt<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0, 
 	SnowWaterEq[1] 	<- startingSnowDepth_m * startingSnowDensity_kg_m3 / WaterDens		
 	SnowDepth[1] 	<- startingSnowDepth_m			
 	Albedo[1] <- ifelse(NewSnow[1] > 0, 0.98-(0.98-0.50)*exp(-4*NewSnow[1]*10),ifelse(startingSnowDepth_m == 0, groundAlbedo, max(groundAlbedo, 0.5+(groundAlbedo-0.85)/10)))  # If snow on the ground or new snow, assume Albedo yesterday was 0.5
-	S[1] <- Solar(lat=lat,Jday=JDay[1], Tx=Tmax_C[1], Tn=Tmin_C[1], albedo=Albedo[1], forest=forest, aspect=aspect, slope=slope, printWarn=FALSE)
+	S[1] <- Solar(lat=lat,Jday=JDay[1], Tx=Tmax_C[1], Tn=Tmin_C[1], albedo=Albedo[1], forest=forest, aspect=aspect, slope=slope)
 	H[1] <- 1.29*(Tav[1]-SnowTemp[1])/rh[1] 
 	E[1] <- lambdaV*(rhoa[1]-rhos[1])/rh[1]
 	if(startingSnowDepth_m>0) TE[1] <- 0.97 
