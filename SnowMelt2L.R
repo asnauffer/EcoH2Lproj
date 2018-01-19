@@ -1,6 +1,6 @@
 
 SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0, tempHt=1, windHt=2, groundAlbedo=0.25, 
-                     SurfEmissiv=0.95, windSp=2, forest=0, startingSnowDepth_m=0, startingSnowDensity_kg_m3=450, G=173, albedoThreshold=0.3){
+                     SurfEmissiv=0.95, windSp=2, forest=0, startingSnowDepth_m=0, startingSnowDensity_kg_m3=450, G=173, albedoThreshold=NA){
 ## Constants :
 	WaterDens <- 1000			# kg/m3
 	lambda <- 3.35*10^5			# latent heat of fusion (kJ/m3)
@@ -90,12 +90,11 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 	
 ##  Snow Melt Loop	
 	for (i in 2:length(precip_m)){
-### PLOT ABEDOs TO CHECK FOR CORRECTNESS
     if (NewSnow[i] > 0){ # new snow but NOT 12 cm
 			Albedo[i] <- 0.98-(0.98-Albedo[i-1])*exp(-4*NewSnow[i]*10) # Kung; McKay & Gray (8)
-#     } else if (SnowDepth[i-1] < 0.1){ # very shallow snowpacks - but NOT SWE < 0.3 m - REMOVED SNOW DEPTH CALC, SO ALBEDO ALWAYS DECAYING - THIS IS AN ERROR!!!
-#       Albedo[i] <- max(groundAlbedo, Albedo[i-1]+(groundAlbedo-0.85)/10)  # albedo decaying with time NOT with SWE
-    } else if (SnowWaterEq[i-1] < albedoThreshold){ # very shallow snowpacks SWE < 0.3 m 
+    } else if (is.na(albedoThreshold) & SnowDepth[i-1] < 0.1){ # very shallow snowpacks - but NOT SWE < 0.3 m
+      Albedo[i] <- max(groundAlbedo, Albedo[i-1]+(groundAlbedo-0.85)/10)  # albedo decaying with time NOT with SWE
+    } else if (is.finite(albedoThreshold) & SnowWaterEq[i-1] < albedoThreshold){ # very shallow snowpacks SWE < 0.3 m 
       Albedo[i] <- max(groundAlbedo, Albedo[i-1]+(groundAlbedo-0.85)*(1-SnowWaterEq[i-1]/0.3))  # albedo decaying with SWE
     } else Albedo[i] <- 0.35-(0.35-0.98)*exp(-1*(0.177+(log((-0.3+0.98)/(Albedo[i-1]-0.3)))^2.16)^0.46) # US Army Corps (7)
 
