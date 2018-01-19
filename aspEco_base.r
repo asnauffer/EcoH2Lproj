@@ -19,7 +19,14 @@ setwd("~/PhD/EcoH2Lproj/")
 # }
 
 source('SnowMelt.R')
-source('SnowMelt2L.R')
+logAlbThr <- T
+if(logAlbThr) {
+  source('SnowMelt2L.R')
+  gitlab <- "_albcomp"
+} else {
+  source('clonedfiles/SnowMelt2L_git.R')
+  gitlab <- "_git"
+}
 source('SnowAccum.R')
 
 print("loading and initializing...")
@@ -29,20 +36,20 @@ stnlat <- asplatlon$stnlatlon.1  # lat used in SnowMelt
 stnlon <- asplatlon$stnlatlon.2
 lstn <- length(stnname)
 #aspphysionum <- unlist(readMat("../matfiles/aspphysionum.mat"))
-#aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
+# aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
+# aspstnnums <- which(is.finite(aspstnsel))
+aspstnnums <- c(11,51,12,43,56,61,27,40) # 8 stations selected for this study
+# aspstnnums <- 1:71
+# aspID5=c("1A01P","1A02P","1A17P","1A19P","1E02P","1E08P","1E10P","1E14P","1F06P","2A06P","2B06P","2B08P","2C10P","2C14P","2D08P","2D14P","2E07P")
 
 # init vectors
 out_asp <- vector("list",1)
-
 yrct <- 0
-
-# aspstnnums <- c(11,51,12,43,56,61,13,40) # 8 stations selected for this study
-aspstnnums <- 1:71
 
 #for(ireg in c(1:3,5)){
 #  aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums){
-    print(paste("stn:",istn,stnname[istn]))
+    print(paste("stn:",istn,stnname[istn],"region",aspstnsel[istn]))
     # read and interpret data
     fn <- paste("../data/ASP/",stnname[istn],".csv",sep="")
     aspallna <- read.csv(fn,skip=8) # read entire file including NA dates
@@ -98,9 +105,11 @@ aspstnnums <- 1:71
       validdates <- aspalldate[logvalidmodel] 
       datediff <- diff(validdates)
       if(sum(logvalidmodel)==0){
+        cat("no valid dates for",iyr,"\n")
         next
       }
-      if(sumswebadtp>30){
+      if(sumswebadtp>100){
+        cat("sumswebadtp =",sumswebadtp,"for",iyr,"\n")
         next
       }
       # run and time SnowMelt
@@ -212,64 +221,72 @@ aspstnnums <- 1:71
       #plot asp and snowmelt curves
       linew <- 5
 #       out_plot <- paste(istn,try({
-        fnout <- paste("plots/temps/mod7/swe12_",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,"_G0.jpg",sep="")
-#         fnout <- paste("plots/",stnname[istn],"_",istn,"_",iyr,"_sumswebad",sumswebadtp,".jpg",sep="")
+#        fnout <- paste("plots/temps/mod8/",stnname[istn],"_",istn,"_",iyr,".jpg",sep="")
+         fnout <- paste("plots/SM2L_",iyr,"_",aspstnsel[istn],"_",istn,"_",stnname[istn],"_sumswebad",sumswebadtp,".jpg",sep="")
         jpeg(fnout,width=480*4,height=480*2,pointsize=24,quality=100)
 #        layout(matrix(c(1,2), 2, 1, byrow = TRUE))
         par(mfrow=c(2,1)) # setup layout
         par(xpd=TRUE) # turns off clipping so legend is visible
+        marvals <- c(3.1, 4.1, 2.1, 2.1) # default c(5.1, 4.1, 4.1, 2.1)
+        par(mar=marvals)
 #        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(0,max(aspswe,smswe,smswe2L,smswe2LG0,smsweaccum,smsweaccumwarm,na.rm=T)))
 #        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew+1,ylim=c(min(-smsm,-smsm2L,-smsmu2L,-smsml2L,na.rm=T),max(aspswe,smswe,smswe2L,na.rm=T)))
-        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,xlim=c(min(aspdate),max(aspdate)+70),ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T)), bty='L')
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,xlim=c(min(aspdate),max(aspdate)+70),ylim=c(0,max(aspswe,smswe,smswe2L,na.rm=T)), bty='L') #,smsweaccum,smsweaccumwarm
         lines(aspdate,smswe,col="red",lwd=linew)
 #        lines(aspdate,-smsm,col="darkred",lwd=linew)
 #        lines(aspdate,smsweG0,col="darkred",lwd=linew)
-        lines(aspdate,smswe2L,col="lightblue",lwd=linew)
-legtxt <- c("ASP measured","EcoH modeled","EcoH 2L albedoThreshold=0.3")
+        lines(aspdate,smswe2L,col="lightblue",lwd=linew+3)
+legtxt <- c("ASP measured","SnowMelt model","SnowMelt2L model")
 legcol <- c("black","red","lightblue")
-nextlegcol <- c("skyblue","blue","darkblue","midnightblue")
+nextlegcol <- c("blue","darkblue","midnightblue")
 #nextlegcol <- c("darkblue","blue","skyblue","lightblue")
-albedos <- c(0.2,0.1,0.05,0)
-for(ia in 3){#1:length(albedos)){
+if(logAlbThr) {
+albedos <- c(0.3,0.05) #0.2,0.1,0.05,0)
+for(ia in 1:2){#1:length(albedos)){
 exectime2L <- tryCatch(round(system.time(
   sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
-                         Tmax_C=asp$Temp..Max.,Tmin_C=asp$Temp..Min.,lat_deg=stnlat[istn],G=0,albedoThreshold=albedos[ia])
+                         Tmax_C=asp$Temp..Max.,Tmin_C=asp$Temp..Min.,lat_deg=stnlat[istn],albedoThreshold=albedos[ia])
 ),3)[3],error = function(e) e)
 if(inherits(exectime2L, "error")) {
   print(paste('SnowMelt2L ERROR: stn',istn,stnname[istn],iyr,'ia=',ia,exectime2L))
 } else {
 smswe2L <- sm_asp2L$SnowWaterEq_mm
-legtxt <- c(legtxt,paste('EcoH 2L albedoThreshold=',albedos[ia]))
+legtxt <- c(legtxt,paste('SnowMelt2L (albedo SWE<',albedos[ia],')',sep=''))
 legcol <- c(legcol,nextlegcol[ia])
 lines(aspdate,smswe2L,col=nextlegcol[ia],lwd=linew-ia)
+}
 }
 }
 #         lines(aspdate,smsweu2L,col="lightblue",lwd=linew-1) # DROPPING BELOW THRESHOLD WHEN LOWER LAYER SWE > 0
 #         lines(aspdate,smswel2L,col="darkblue",lwd=linew-1)
 #        lines(aspdate,-smsm2L,col="darkblue",lwd=linew-1)
 #        lines(aspdate,smswe2LG0,col="darkblue",lwd=linew)
-       lines(aspdate,smsweaccum,col="darkgreen",lwd=linew)
-       lines(aspdate,smsweaccumwarm,col="orange",lwd=linew)
-      legtxt <- c(legtxt,'Total SWE accum (Tav<=0)','Total precip accum')
-      legcol <- c(legcol,'darkgreen','orange')
+      #  lines(aspdate,smsweaccum,col="darkgreen",lwd=linew)
+      #  lines(aspdate,smsweaccumwarm,col="orange",lwd=linew)
+      # legtxt <- c(legtxt,'Total SWE accum (Tav<=0)','Total precip accum')
+      # legcol <- c(legcol,'darkgreen','orange')
 #        title(paste("Station",stnname[istn],iyr,"1L exec time =",exectime,"MAE =",round(mae,0),"; 2L exec time =",exectime2L,"MAE =",round(mae2L,0)))
-        title(paste("Station",stnname[istn],iyr,"MAE =",round(mae,0),"; 2L MAE =",round(mae2L,0)))
+        title(paste("Station",stnname[istn],iyr)) #,"MAE =",round(mae,0),"; 2L MAE =",round(mae2L,0)))
+        mtext("(a)",side=3,line=1,at=as.Date(paste(iyr-1,"-09-01",sep="")),cex=1)
 #        legend("topleft",c("ASP measured","EcoH modeled","EcoH modeled G=0","EcoH 2L modeled","EcoH 2L modeled G=0","P(Tav<0) measured","Total P measured"),
 #               col=c("black","red","darkred","blue","darkblue","green","darkorange"),lwd=linew,bty="n")
 #         legend("topleft",c("ASP measured","EcoH modeled","EcoH 2L modeled","EcoH 2L Upper","EcoH 2L Lower"),
 #                 col=c("black","red","blue","lightblue","darkblue"),lwd=linew,bty="n")
-legend(max(aspdate),max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T),legtxt,col=legcol,lwd=linew,bty="n")
+legend(max(aspdate),max(aspswe,smswe,smswe2L,na.rm=T),legtxt,col=legcol,lwd=linew,bty="n")
         tempdata <- data.frame((asp$Temp..Max.+asp$Temp..Min.)/2,sm_asp$SnowTemp,sm_asp2L$SnowTempUpper,sm_asp2L$SnowTempLower)
+        
+        # temperature plot
         plot(aspdate,(asp$Temp..Max.+asp$Temp..Min.)/2,col="green","l",xlab="",ylab="T (deg-C)",lwd=linew,xlim=c(min(aspdate),max(aspdate)+70),ylim=c(min(tempdata),max(tempdata)), bty='L')
         lines(aspdate,asp$Temp..Max.,col="lightgreen",lwd=1.5)
         lines(aspdate,asp$Temp..Min.,col="darkgreen",lwd=1.5)
         lines(aspdate,sm_asp$SnowTemp,col="black",lwd=6)
         lines(aspdate,sm_asp2L$SnowTempUpper,col="red",lwd=5)
         lines(aspdate,sm_asp2L$SnowTempLower,col="blue",lwd=2)
+        mtext("(b)",side=3,line=1,at=as.Date(paste(iyr-1,"-09-01",sep="")),cex=1)
         legend(max(aspdate),max(asp$Temp..Max.,na.rm=T),c("Tav Air","Tmax Air","Tmin Air","EcoH 1L Snow T","EcoH 2L UpperL Snow T","EcoH 2L LowerL Snow T"),
                col=c("green","lightgreen","darkgreen","black","red","blue"),lwd=linew,bty="n")
         dev.off()
-        print(paste(stnname[istn],iyr,round(mae,3),exectime,round(mae2L,3),exectime2L,fnout,"plotted"))
+        cat(fnout,"plotted\n")
 #       }))
       
     }
