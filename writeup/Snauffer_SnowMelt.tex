@@ -81,18 +81,38 @@ Canada
 \newpage
 
 \section{Abstract}
+Snow models are often employed to study snowpack evolution when detailed observations are not available.
+Full energy balance models represent physical states as well as heat and water fluxes, but their data requirements are often very intensive.
+Simpler temperature-index models require less data, but they are reliant on the accurate calibration of melt factors and give little information on internal snowpack dynamics.
+A compromise approach such as the R package EcoHydRology SnowMelt model may offer the best of both worlds.
+This one-layer model includes numerous simplifications and approximations to reduce the data requirements to no more than those of a temperature-index model.
+At the same time, because SnowMelt is a full energy balance model, it represents physical processes and is not subject to melt factor calibration uncertainties.
+Since previous work has shown that multi-layer snow models offer better performance than those using one layer, an effort has been undertaken to move SnowMelt to a two-layer configuration.
+This design was then tested at snow pillow sites in four of the five physiographic regions within the province of British Columbia (BC), Canada: the Coast Mountains and Islands, the Columbia and Rocky Mountains, the Northern Plateaus and Mountains, and the Interior Plateau (no snow pillow sites are located in the BC Plains, see \citet{holland1964landforms,bcmof1994} for more details on these regions).
+While compelling improvements in the modeled SWE were not realized, the two-layer can yield insights into physical processes and snow states within the snowpack.
 
 \bigskip
-\noindent KEY WORDS \: snow water equivalent; alpine regions; snow course; 
+\noindent KEY WORDS \: snow water equivalent; energy balance snow model; temperature-index snow model; automated snow pillow
 
 \section{Introduction}
-snow water equivalent (SWE)
+The modeling of snowpack accumulation and melt is important from the perspectives of both data gaps and process understanding.
+While numerous readily available gridded data products can give coarse representations of regional scale snow water equivalent (SWE), they may fail to capture details in the local SWE field, particularly in areas of high snow accumulation and complex topography \citep{snauffer2016comparison}.
+Such conditions dominate the province of British Columbia (BC), Canada.
+In such cases, a snow model fed with reliable local data may be better able to simulate snow conditions.
 
-\section{Methods}
 Full energy balance snow models require many data inputs that may not be easily accessible, while simple temperature-index models need substantial information and are subject to significant uncertainties in the calibration of the melt factor.
 The SnowMelt function of the R package EcoHydRology \citep{fuka2014ecohydrology} addresses this challenge by estimating a portion of the data necessary to the energy balance such that the model works using no more data than a simple temperature-index model.
 A full accounting of those approximations is given in \citet{walter2005process}.
+While the SnowMelt model represents a useful compromise between the two traditional classes, 
+Previous studies \citep{jost2012distributed} have shown that multi-layer snow models improve the representation of physical processes within the snowpack.
+Even a two-layer design more accurately reflects the temperature variations and insulating effects of surface snow versus the ground layer.
+The objective of this work is to implement a functioning two-layer design for the SnowMelt model.
 
+\section{Methods}
+This work sought to improve the SnowMelt model within the R package EcoHydRology \citep{fuka2014ecohydrology} by moving it to a two-layer design.
+The existing code is described below, and the modification approach follows.
+
+\subsection{Existing SnowMelt Procedure}
 A listing of the SnowMelt source code is presented Appendix A.
 A summary of the function procedure follows.
 \begin{enumerate}
@@ -102,11 +122,11 @@ A summary of the function procedure follows.
   \begin{enumerate}
     \item Set starting SWE and snow depth using initial input values for snow depth and density.
     \item Calculate snow albedo based on ground albedo or amount of new snow, if new snow has been received.
-    \item Calculate insolation based on latitude, Julian date, min and max daily temperature, albedo, forest cover, slope, and aspect.
+    \item Calculate longwave radiation based on latitude, Julian date, min and max daily temperature, albedo, forest cover, slope, and aspect.
     \item Calculate sensible heat exchanged based on mean daily temperature, snow temperature, and thermal resistance.
     \item Calculate vapor energy based on latent heat of vaporization, thermal resistance, and saturated vapor density at both snow and atmospheric temperatures.
-    \item Calculate daily longwave radiation based on the Stefan-Boltzman equation.
-    \item Calculate net energy based on insolation, atmospheric and terrestrial longwave radiation, sensible heat, vapor energy, ground conduction, and precipitation heat.
+    \item Calculate daily longwave radiation based on the Stefan-Boltzmann equation using emissivity estimates from \citet{campbell1998introduction}.
+    \item Calculate net energy based on longwave radiation, atmospheric and terrestrial longwave radiation, sensible heat, vapor energy, ground conduction, and precipitation heat.
     \item Calculate snow density by blending existing and new snow.
     \item Calculate snowmelt based on net energy above that required to raise snow temperature to the melting point.
     \item Calculate SWE by summing changes (old + new - melt) and find resulting snow depth by dividing by density.
@@ -114,13 +134,13 @@ A summary of the function procedure follows.
   \item Loop through remaining time steps:
   \begin{enumerate}
     \item Calculate snow albedo as above.
-    \item Calculate insolation as above.
+    \item Calculate longwave radiation as above.
     \item If there is snow on the ground, set a density coefficient and recalculate snow temperature using the energy balance plus previous and current density and depth values.
       % 		SnowTemp[i] <- max(min(0,Tmin_C[i]),  # can't be 
       % 				   min(0,(SnowTemp[i-1]+
       % 					  min(-SnowTemp[i-1],
       % 	Energy[i-1]/((SnowDensity[i-1]*SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
-    \item Recalcalculate saturated vapor density at new snow temperature.
+    \item Recalculate saturated vapor density at new snow temperature.
     \item Calculate sensible heat exchanged as above.
     \item Calculate vapor energy as above.
     \item Calculate daily longwave radiation as above.
@@ -137,10 +157,11 @@ A summary of the function procedure follows.
 \end{enumerate}
 
 This approach uses a one-layer snowpack with properties uniformly set throughout.
-However, the one-layer approach fails to take into account energy and melt variations within the snowpack, specifically the insulating properties of upper snow layers \citep{jost2012distributed}.
-This previous work handled this limitation by constructing a two-layer snowpack with an upper layer of 100 mm SWE.
+However, the one-layer approach fails to take into account energy and melt variations within the snowpack, specifically the insulating properties of upper snow layers.
+\citet{jost2012distributed} handled this limitation by constructing a two-layer snowpack with an upper layer of 100 mm SWE.
 A similar approach was employed by the current study in order to improve the representation of the seasonal snow cycle.
 
+\subsection{Modified SnowMelt2L Procedure}
 A listing of the modified SnowMelt source code, named SnowMelt2L, is presented Appendix B.
 A summary of the changes implemented is as follows.
 \begin{enumerate}
@@ -160,13 +181,13 @@ A summary of the changes implemented is as follows.
   \begin{enumerate}
     \item Partition energy between layers (ground conduction to lower layer, everything else to upper). Note: this does not consider conduction across layers.
     \item Calculate snow density as before, blending new snow and existing snow density, which exponentially approaches 450.
-    \item Calculate snowmelt, snow depth and SWE as before, using a maximum 100 mm upper layer and respective energy and snow temperature terms. Totals = sum of upper and lower. Note: this does not consider refreezing.
+    \item Calculate snowmelt, snow depth and SWE as before, using a maximum 100 mm upper layer and respective energy and snow temperature terms. Total values = sums of upper and lower layers. Note: this does not consider refreezing.
   \end{enumerate}
 \end{enumerate}
 
 An initial assessment of the SnowMelt2L performance revealed that the two-layer model was in many cases melting off snow earlier than the one-layer design.
 Further examinations of the code showed that the selection of the albedo decay function was based on a snow depth threshold set to 0.1 m in the code.
-This conditional was different from that specfied in \citep{walter2005process}, which specified a SWE threshold of 0.3 m water equivalent.
+This conditional was different from that described in \citep{walter2005process}, which specified a SWE threshold of 0.3 m water equivalent.
 A subsequent change in the code was made to allow for the specification of a SWE threshold, which was implemented as follows.
 \begin{enumerate}
   \item Accept an optional input argument to SnowMelt2L that allows a SWE threshold to be checked for selection of an albedo decay function.
@@ -176,27 +197,80 @@ A subsequent change in the code was made to allow for the specification of a SWE
   \item Else decay the albedo with time according to the empirical relationship developed by \citet{armycorps1960runoff}.
 \end{enumerate}
 
+\subsection{Driver aspEco\_base.R}
 A driver code for the SnowMelt model was also written.
 This code extracted snow pillow station information, performed error checking on the data, and plotted yearly time series for measured and modeled values.
-The driver code, called aspEcobase.R, is shown in Appendix C.
+The driver code, called aspEco\_base.R, is shown in Appendix C.
 
+\section{Results and Discussion}
+Snow season SWE and snowpack temperature curves are shown in Figures 1-4.
+Panel (a) in each figure shows SWE values as measured by Automated Snow Pillows (ASPs) in black.
+SWE values calculated by the original SnowMelt model, which uses measured air temperature and precipitation values from the stations, are shown in red, while the modified SnowMelt2L results are shown in shades of blue.
+When it was observed that the two-layer design did not seem to improve the results, particularly during the melting of the snow, a closer look at the albedo conditional was taken.
+Albedo is calculated using several different approximations \citep{kung1964study,mckay1981distribution,armycorps1960runoff} and decay series, which according to \citet{walter2005process} is tied to the amount of SWE.
+In the SnowMelt code, however, selection of albedo is determined by snow depth.
+The calculated albedo is an input to the Solar routine of EcoHydRology, so it seemed plausible that an incorrect representation would cause the snow to melt prematurely.
+Two threshold values were tested, 0.3 m as suggested by \citet{walter2005process}, and 0.05 m, a lower but non-zero value.
+Results from the original albedo threshold conditional relying on snow depths $<$ 0.1 m are in light blue.
+Results from the modified conditional relying on SWE values $<$ 0.3 m are in blue, and those relying on SWE values $<$ 0.05 m are in dark blue.
 
+Overall, the plotted SWE curves showed that adding a second layer did not improve the model results relative to measurements.
+This was particularly true in the latter portion of the season, when melting had commenced.
+In general both the one-layer and two-layer SnowMelt designs started melting snow too early and then melted the snow too quickly.
+This condition was seen across virtually all stations and seasons.
+Results for snow stations in each of the physiographic regions of BC (except the BC Plains, which has no snow pillows) are shown in Figures 1-4.
 
-\section{Results}
+\begin{figure}
+  \adjincludegraphics[width=\linewidth]{SM2L_2006_1_11}
+  \caption{Time series for (a) SWE and (b) snow temperature for the 2006 snow season for station 1C18P Mission Ridge in the Coast Mountains and Islands.}
+  \label{fig:SM2L_2006_reg1}
+  
+  \bigskip
+  \bigskip
+  \bigskip
+  \bigskip
 
+  \adjincludegraphics[width=\linewidth]{SM2L_2006_5_27}
+  \caption{Time series for (a) SWE and (b) snow temperature for the 2006 snow season for station 1E14P Cook Creek in the Columbia and Southern Rocky Mountains.}
+  \label{fig:SM2L_2006_reg5}
+\end{figure}
 
+\begin{figure}
+  \adjincludegraphics[width=\linewidth]{SM2L_2006_3_56}
+  \caption{Time series for (a) SWE and (b) snow temperature for the 2006 snow season for station 4A27P Kwadacha River in the Northern Plateaus and Mountains.}
+  \label{fig:SM2L_2006_reg3}
+\end{figure}
 
-\section{Discussion}
+\begin{figure}
+  \adjincludegraphics[width=\linewidth]{SM2L_2006_2_12}
+  \caption{Time series for (a) SWE and (b) snow temperature for the 2006 snow season for station 1C20P Boss Mountain Mine in the Interior Plateau.}
+  \label{fig:SM2L_2006_reg2}
+\end{figure}
 
+To further investigate the model representations, snowpack temperatures were plotted in panel (b) of Figures 1-4.
+The air temperature means are shown in green, as well as minima and maxima in light green and dark green, respectively.
+The single-layer SnowMelt snow temperatures are displayed in black, and the upper and lower snowpack temperatures in SnowMelt2L in red and blue, respectively.
+For each of the stations plotted, the modeled SWE commences melting once the lower layer and (usually) the upper layer reach the melting point.
+In actuality, the snow continues to last for one or more weeks before beginning a sharp drop off.
+This suggests that either the measured temperatures are not reflecting the important local conditions (i.e.\ temperature or heat flux at the snow surface), the modeled temperatures are wrong, or the cold content of the snowpack is not being adequately captured.
+A curious observation is that the upper layer temperature seems to get quickly lifted whenever the minimum air temperature rises above that of the upper layer, and this sometimes results in the commencement of melting.
+In reality the snowpack temperatures should respond more slowly to changes in air temperature.
+Correction of the snowpack temperature dependencies may be necessary to correct this effect.
 
 
 \section{Conclusion}
-
+This work sought to improve the representation of snow in the simplified full energy balance SnowMelt, a key routine of the R package EcoHydRology.
+While the addition of a second layer to the snow model did not improve performance, it appeared that the initiation of melting was linked closely to increases in temperature in the snowpack.
+Changes to the thresholds for different albedo approximations were attempted, but these did not improve performance beyond that of the base SnowMelt model.
+To improve the model, it may be necessary to improve the representation of snowpack temperature and/or cold content.
+Numerous other model changes were tested but not presented here, including modifications to ground conduction, separation of snow density and depth by layers, and changes to density coefficient and k constants, but these did not yield improvements.
+Further lines of inquiry that were not possible because of time limitations may include the plotting of all heat fluxes, the express tracking of thawing and refreezing water, and modeling the conduction of heat between layers.
+Such modifications may lead to the development of a simplified, two-layer energy balance model that improves the representation of snowpack physical processes while simultaneously minimizing data requirements.
 
 
 \section{Acknowledgements}
 Funding for this work was provided by the Canadian Sea Ice and Snow Evolution (CanSISE) Network funded through the Climate Change and Atmospheric Research (CCAR) initiative of Canada's Natural Sciences and Engineering Research Council (NSERC).  
-
+R. Dan Moore is gratefully acknowledged for his guidance and input.
 
 \bibliographystyle{natbib}
 \bibliography{Snauffer_biblio}
@@ -214,6 +288,7 @@ Funding for this work was provided by the Canadian Sea Ice and Snow Evolution (C
 \section{Appendix A}
 The following is the SnowMelt source code, part of the EcoHydRology R package version 0.4.12, published April 4, 2014.
 It was obtained from \url{https://cran.r-project.org/web/packages/EcoHydRology/index.html} on January 9, 2018.
+A small modification was made so that the function returned snow temperatures, in order to plot these for diagnostic purposes.
 
 \bigskip
 
